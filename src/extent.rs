@@ -238,6 +238,40 @@ where
         }
     }
 
+    #[inline]
+    pub fn iter2(&self) -> impl Iterator<Item = V>
+    where
+        V: Vector2,
+        std::ops::Range<V::IntScalar>: Iterator<Item = V::IntScalar>,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+        let y_range = min.y()..lub.y();
+        let x_range = min.x()..lub.x();
+
+        y_range.flat_map(move |y| x_range.clone().map(move |x| V::from([x, y])))
+    }
+
+    #[inline]
+    pub fn iter3(&self) -> impl Iterator<Item = V>
+    where
+        V: Vector3,
+        std::ops::Range<V::IntScalar>: Iterator<Item = V::IntScalar>,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+        let z_range = min.z()..lub.z();
+        let y_range = min.y()..lub.y();
+        let x_range = min.x()..lub.x();
+
+        z_range.flat_map(move |z| {
+            y_range.clone().flat_map({
+                let x_range = x_range.clone();
+                move |y| x_range.clone().map(move |x| V::from([x, y, z]))
+            })
+        })
+    }
+
     /// Returns the smallest extent containing all of the given vectors.
     #[inline]
     pub fn bounding_extent<I>(mut vectors: I) -> Self
@@ -349,5 +383,50 @@ where
             minimum: self.minimum >> rhs,
             shape: self.shape >> rhs,
         }
+    }
+}
+
+#[cfg(all(test, feature = "glam"))]
+mod tests {
+    use glam::{UVec2, UVec3};
+
+    use super::Extent;
+
+    #[test]
+    fn test_iter2() {
+        let e = Extent::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
+
+        let points: Vec<_> = e.iter2().collect();
+
+        assert_eq!(
+            points,
+            vec![
+                UVec2::new(1, 2),
+                UVec2::new(2, 2),
+                UVec2::new(1, 3),
+                UVec2::new(2, 3)
+            ]
+        );
+    }
+
+    #[test]
+    fn test_iter3() {
+        let e = Extent::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
+
+        let points: Vec<_> = e.iter3().collect();
+
+        assert_eq!(
+            points,
+            vec![
+                UVec3::new(1, 2, 3),
+                UVec3::new(2, 2, 3),
+                UVec3::new(1, 3, 3),
+                UVec3::new(2, 3, 3),
+                UVec3::new(1, 2, 4),
+                UVec3::new(2, 2, 4),
+                UVec3::new(1, 3, 4),
+                UVec3::new(2, 3, 4)
+            ]
+        );
     }
 }
