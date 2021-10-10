@@ -151,6 +151,42 @@ where
     pub fn is_subset_of(&self, other: &Self) -> bool {
         self.intersection(other).eq(self)
     }
+
+    #[inline]
+    pub fn corners2(&self) -> [V; 4]
+    where
+        V: Vector2,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+
+        [
+            V::from([min.x(), min.y()]),
+            V::from([lub.x(), min.y()]),
+            V::from([min.x(), lub.y()]),
+            V::from([lub.x(), lub.y()]),
+        ]
+    }
+
+    #[inline]
+    pub fn corners3(&self) -> [V; 8]
+    where
+        V: Vector3,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+
+        [
+            V::from([min.x(), min.y(), min.z()]),
+            V::from([lub.x(), min.y(), min.z()]),
+            V::from([min.x(), lub.y(), min.z()]),
+            V::from([lub.x(), lub.y(), min.z()]),
+            V::from([min.x(), min.y(), lub.z()]),
+            V::from([lub.x(), min.y(), lub.z()]),
+            V::from([min.x(), lub.y(), lub.z()]),
+            V::from([lub.x(), lub.y(), lub.z()]),
+        ]
+    }
 }
 
 impl<V> Extent<V>
