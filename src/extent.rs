@@ -232,48 +232,6 @@ where
         lub - V::ONES
     }
 
-    /// Calls `f` on every point in `self`.
-    #[inline]
-    pub fn for_each2(&self, mut f: impl FnMut(V))
-    where
-        V: Vector2,
-    {
-        let min = self.minimum;
-        let lub = self.least_upper_bound();
-        let mut y = min.y();
-        while y < lub.y() {
-            let mut x = min.x();
-            while x < lub.x() {
-                f(V::from([x, y]));
-                x = x + V::IntScalar::ONE;
-            }
-            y = y + V::IntScalar::ONE;
-        }
-    }
-
-    /// Calls `f` on every point in `self`.
-    #[inline]
-    pub fn for_each3(&self, mut f: impl FnMut(V))
-    where
-        V: Vector3,
-    {
-        let min = self.minimum;
-        let lub = self.least_upper_bound();
-        let mut z = min.z();
-        while z < lub.z() {
-            let mut y = min.y();
-            while y < lub.y() {
-                let mut x = min.x();
-                while x < lub.x() {
-                    f(V::from([x, y, z]));
-                    x = x + V::IntScalar::ONE;
-                }
-                y = y + V::IntScalar::ONE;
-            }
-            z = z + V::IntScalar::ONE;
-        }
-    }
-
     #[inline]
     pub fn iter2(&self) -> impl Iterator<Item = V>
     where

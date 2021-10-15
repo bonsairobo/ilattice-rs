@@ -14,7 +14,7 @@
 //!
 //! assert!(EXTENT.contains(IVec3::new(-1, 3, 0)));
 //!
-//! EXTENT.for_each3(|v| { assert!(EXTENT.contains(v)); });
+//! EXTENT.iter3().for_each(|v| { assert!(EXTENT.contains(v)); });
 //!
 //! // Some bitwise logic and shifting code that works for any integer vector.
 //! fn do_vector_math<V: IntegerVector>(v: V, mask: V, shape_log2: V) -> V {
