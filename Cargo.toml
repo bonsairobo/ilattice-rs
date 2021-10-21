@@ -3,7 +3,7 @@ name = "ilattice"
 version = "0.1.0"
 description = "2 and 3-dimensional integer lattice math."
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/bonsairobo/ndshape-rs"
+repository = "https://github.com/bonsairobo/ilattice-rs"
 edition = "2018"
 keywords = ["vector", "integer", "math", "3D", "morton"]
 
