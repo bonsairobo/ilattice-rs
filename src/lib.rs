@@ -1,16 +1,20 @@
-//! Generic math on integer lattices (regular grids).
+//! Generic math on [integer lattices](https://en.wikipedia.org/wiki/Integer_lattice) (regular grids).
 //!
 //! This crate provides types and traits that make it easy to write generic code with integer lattices, i.e. `Z^N`. In
-//! particular, we provide implementations of [`IntegerVector`](crate::vector::IntegerVector) for `glam`'s `IVec2`, `IVec3`,
-//! `UVec2`, and `UVec3` types. There are also some traits that apply to vectors with real number scalars as well, and those are
-//! implemented for `Vec2` and `Vec3A`.
+//! particular, we provide implementations of [`IntegerVector`](crate::vector::IntegerVector) for `glam`'s
+//! [`IVec2`](glam::IVec2), [`IVec3`](glam::IVec3), [`UVec2`](glam::UVec2) and [`UVec3`](glam::UVec3) types. There are also some
+//! traits that apply to vectors with real number scalars as well, and those are implemented for [`Vec2`](glam::Vec2),
+//! [`Vec3`](glam::Vec3), and [`Vec3A`](glam::Vec3A).
 //!
 //! # Example Code
 //! ```
 //! use ilattice::prelude::*;
 //!
-//! // A useful type for looking at bounded subsets of the lattice.
-//! const EXTENT: Extent<IVec3> = Extent::from_min_and_shape(const_ivec3!([-1; 3]), const_ivec3!([5; 3]));
+//! // A useful type for working with bounded subsets of the lattice.
+//! const EXTENT: Extent<IVec3> = Extent::from_min_and_shape(
+//!     const_ivec3!([-1; 3]),
+//!     const_ivec3!([5; 3])
+//! );
 //!
 //! assert!(EXTENT.contains(IVec3::new(-1, 3, 0)));
 //!

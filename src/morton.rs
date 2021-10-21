@@ -4,10 +4,10 @@
 //! first, then y, then z).
 //!
 //! ```
-//! # use ilattice::morton::Morton3u8;
-//! assert_eq!(Morton3u8::from([1, 0, 0]), Morton3u8(0b0001));
-//! assert_eq!(Morton3u8::from([0, 1, 0]), Morton3u8(0b0010));
-//! assert_eq!(Morton3u8::from([0, 0, 1]), Morton3u8(0b0100));
+//! # use ilattice::prelude::{Morton3u32, UVec3};
+//! assert_eq!(Morton3u32::from(UVec3::new(1, 0, 0)), Morton3u32(0b0001));
+//! assert_eq!(Morton3u32::from(UVec3::new(0, 1, 0)), Morton3u32(0b0010));
+//! assert_eq!(Morton3u32::from(UVec3::new(0, 0, 1)), Morton3u32(0b0100));
 //! ```
 
 // NOTE: The morton-encoding crate interprets arrays as [z, y, x], but we reverse that order to [x, y, z].

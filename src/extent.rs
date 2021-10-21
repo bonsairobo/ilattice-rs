@@ -116,11 +116,17 @@ where
     ///
     /// ```
     /// # use ilattice::extent::Extent;
-    /// # use glam::const_ivec2;
-    /// let e1 = Extent::from_min_and_max(const_ivec2!([0; 2]), const_ivec2!([1; 2]));
-    /// let e2 = Extent::from_min_and_max(const_ivec2!([3; 2]), const_ivec2!([4; 2]));
+    /// # use glam::IVec2;
+    /// let e1 = Extent::from_min_and_max(IVec2::from([0; 2]), IVec2::from([3; 2]));
+    /// let e2 = Extent::from_min_and_max(IVec2::from([2; 2]), IVec2::from([4; 2]));
     ///
-    /// assert_eq!(e1.intersection(&e2).shape, const_ivec2!([0; 2]));
+    /// assert_eq!(e1.intersection(&e2), Extent::from_min_and_max(IVec2::from([2; 2]), IVec2::from([3; 2])));
+    /// assert!(!e1.intersection(&e2).is_empty());
+    ///
+    /// let e1 = Extent::from_min_and_max(IVec2::from([0; 2]), IVec2::from([1; 2]));
+    /// let e2 = Extent::from_min_and_max(IVec2::from([3; 2]), IVec2::from([4; 2]));
+    ///
+    /// assert_eq!(e1.intersection(&e2).shape, IVec2::from([0; 2]));
     /// assert!(e1.intersection(&e2).is_empty());
     /// ```
     #[inline]
@@ -133,11 +139,9 @@ where
         Self::from_min_and_lub(minimum, lub)
     }
 
-    /// Returns the smallest extent containing all the points in `self` or `other`.
-    ///
-    /// This is not strictly a union of sets of points, but it is the closest we can get while still using an `Extent`.
+    /// Returns the smallest extent containing all points in `self` or `other`.
     #[inline]
-    pub fn quasi_union(&self, other: &Self) -> Self {
+    pub fn bound_union(&self, other: &Self) -> Self {
         let minimum = self.minimum.greatest_lower_bound(other.minimum);
         let lub = self
             .least_upper_bound()
@@ -152,6 +156,7 @@ where
         self.intersection(other).eq(self)
     }
 
+    /// Returns all 4 corners of a 2-dimensional extent.
     #[inline]
     pub fn corners2(&self) -> [V; 4]
     where
@@ -168,6 +173,7 @@ where
         ]
     }
 
+    /// Returns all 8 corners of a 3-dimensional extent.
     #[inline]
     pub fn corners3(&self) -> [V; 8]
     where
@@ -211,14 +217,15 @@ where
 
     /// The number of points contained in the extent.
     #[inline]
-    pub fn num_points(&self) -> usize {
-        match self.volume().try_into() {
+    pub fn num_points(&self) -> u64 {
+        let volume = self.volume();
+        match volume.try_into() {
             Ok(n) => n,
-            Err(_) => panic!("Negative volume!"),
+            Err(_) => panic!("Failed to convert {:?} to u64", volume),
         }
     }
 
-    /// Returns `true` iff the number of points in the extent is 0.
+    /// Returns `true` iff `self.num_points() == 0`.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.num_points() == 0
@@ -232,6 +239,25 @@ where
         lub - V::ONES
     }
 
+    /// Returns an iterator over all points in this 2-dimensional extent.
+    ///
+    /// ```
+    /// # use ilattice::extent::Extent;
+    /// # use glam::UVec2;
+    /// let e = Extent::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
+    ///
+    /// let points: Vec<_> = e.iter2().collect();
+    ///
+    /// assert_eq!(
+    ///     points,
+    ///     vec![
+    ///         UVec2::new(1, 2),
+    ///         UVec2::new(2, 2),
+    ///         UVec2::new(1, 3),
+    ///         UVec2::new(2, 3)
+    ///     ]
+    /// );
+    /// ```
     #[inline]
     pub fn iter2(&self) -> impl Iterator<Item = V>
     where
@@ -246,6 +272,28 @@ where
         y_range.flat_map(move |y| x_range.clone().map(move |x| V::from([x, y])))
     }
 
+    /// Returns an iterator over all points in this 3-dimensional extent.
+    /// ```
+    /// # use ilattice::extent::Extent;
+    /// # use glam::UVec3;
+    /// let e = Extent::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
+    ///
+    /// let points: Vec<_> = e.iter3().collect();
+    ///
+    /// assert_eq!(
+    ///     points,
+    ///     vec![
+    ///         UVec3::new(1, 2, 3),
+    ///         UVec3::new(2, 2, 3),
+    ///         UVec3::new(1, 3, 3),
+    ///         UVec3::new(2, 3, 3),
+    ///         UVec3::new(1, 2, 4),
+    ///         UVec3::new(2, 2, 4),
+    ///         UVec3::new(1, 3, 4),
+    ///         UVec3::new(2, 3, 4)
+    ///     ]
+    /// );
+    /// ```
     #[inline]
     pub fn iter3(&self) -> impl Iterator<Item = V>
     where
@@ -266,19 +314,19 @@ where
         })
     }
 
-    /// Returns the smallest extent containing all of the given vectors.
+    /// Returns the smallest extent containing all of the given points.
     #[inline]
-    pub fn bounding_extent<I>(mut vectors: I) -> Self
+    pub fn bound_points<I>(mut points: I) -> Self
     where
         I: Iterator<Item = V>,
     {
-        let first_v = vectors
+        let first_v = points
             .next()
-            .expect("Cannot find bounding extent of empty set of vectors");
+            .expect("Cannot find bounding extent of empty set of points");
 
         let mut min_point = first_v;
         let mut max_point = first_v;
-        for v in vectors {
+        for v in points {
             min_point = min_point.greatest_lower_bound(v);
             max_point = max_point.least_upper_bound(v);
         }
@@ -377,50 +425,5 @@ where
             minimum: self.minimum >> rhs,
             shape: self.shape >> rhs,
         }
-    }
-}
-
-#[cfg(all(test, feature = "glam"))]
-mod tests {
-    use glam::{UVec2, UVec3};
-
-    use super::Extent;
-
-    #[test]
-    fn test_iter2() {
-        let e = Extent::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
-
-        let points: Vec<_> = e.iter2().collect();
-
-        assert_eq!(
-            points,
-            vec![
-                UVec2::new(1, 2),
-                UVec2::new(2, 2),
-                UVec2::new(1, 3),
-                UVec2::new(2, 3)
-            ]
-        );
-    }
-
-    #[test]
-    fn test_iter3() {
-        let e = Extent::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
-
-        let points: Vec<_> = e.iter3().collect();
-
-        assert_eq!(
-            points,
-            vec![
-                UVec3::new(1, 2, 3),
-                UVec3::new(2, 2, 3),
-                UVec3::new(1, 3, 3),
-                UVec3::new(2, 3, 3),
-                UVec3::new(1, 2, 4),
-                UVec3::new(2, 2, 4),
-                UVec3::new(1, 3, 4),
-                UVec3::new(2, 3, 4)
-            ]
-        );
     }
 }

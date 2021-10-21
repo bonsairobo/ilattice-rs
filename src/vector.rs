@@ -1,9 +1,11 @@
 use core::ops::{Add, Div, Mul, Neg, Rem, Sub};
+use std::fmt::Debug;
 
 pub trait Scalar:
     'static
     + Sized
     + Copy
+    + Debug
     + Zero
     + One
     + Add<Output = Self>
@@ -162,11 +164,11 @@ mod integer_vector {
 
     pub trait IntegerScalar:
         Scalar
-        + TryInto<usize>
+        + TryInto<u64>
         + PrimitiveCast<u8>
         + PrimitiveCast<u16>
         + PrimitiveCast<u32>
-        + PrimitiveCast<usize>
+        + PrimitiveCast<u64>
     {
         fn is_power_of_two(self) -> bool;
         fn trailing_zeros(self) -> Self;
@@ -281,10 +283,10 @@ mod scalar_impl {
                     self as u32
                 }
             }
-            impl PrimitiveCast<usize> for $t {
+            impl PrimitiveCast<u64> for $t {
                 #[inline]
-                fn cast(self) -> usize {
-                    self as usize
+                fn cast(self) -> u64 {
+                    self as u64
                 }
             }
 
