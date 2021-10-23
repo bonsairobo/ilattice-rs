@@ -221,6 +221,12 @@ macro_rules! impl_unsigned_shift_ops {
 
 macro_rules! impl_signed_vector {
     ($vec:ident) => {
+        impl SignedVector for $vec {
+            #[inline]
+            fn signum(self) -> Self {
+                self.signum()
+            }
+        }
         impl Abs for $vec {
             #[inline]
             fn abs(self) -> Self {

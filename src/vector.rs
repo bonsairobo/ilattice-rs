@@ -162,7 +162,9 @@ pub trait Bounded {
 mod signed_vector {
     use super::*;
 
-    pub trait SignedVector: Vector + Abs + Neg {}
+    pub trait SignedVector: Vector + Abs + Neg {
+        fn signum(self) -> Self;
+    }
 
     pub trait Abs {
         fn abs(self) -> Self;
