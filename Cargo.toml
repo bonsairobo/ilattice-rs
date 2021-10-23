@@ -1,0 +1,11 @@
+[package]
+name = "grid-ray"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["glam"]
+glam = ["ilattice/glam"]
+
+[dependencies]
+ilattice = { git = "https://github.com/bonsairobo/ilattice-rs", branch = "main", default-features = false }
