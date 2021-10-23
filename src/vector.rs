@@ -45,6 +45,9 @@ pub trait Vector2: Vector + From<[Self::Scalar; 2]> {
     fn x(self) -> Self::Scalar;
     fn y(self) -> Self::Scalar;
 
+    fn x_mut(&mut self) -> &mut Self::Scalar;
+    fn y_mut(&mut self) -> &mut Self::Scalar;
+
     #[inline]
     fn as_array<T>(self) -> [T; 2]
     where
@@ -58,6 +61,10 @@ pub trait Vector3: Vector + From<[Self::Scalar; 3]> {
     fn x(self) -> Self::Scalar;
     fn y(self) -> Self::Scalar;
     fn z(self) -> Self::Scalar;
+
+    fn x_mut(&mut self) -> &mut Self::Scalar;
+    fn y_mut(&mut self) -> &mut Self::Scalar;
+    fn z_mut(&mut self) -> &mut Self::Scalar;
 
     #[inline]
     fn as_array<T>(self) -> [T; 3]

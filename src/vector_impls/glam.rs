@@ -325,6 +325,14 @@ macro_rules! impl_vec2 {
             fn y(self) -> Self::Scalar {
                 self.y
             }
+            #[inline]
+            fn x_mut(&mut self) -> &mut Self::Scalar {
+                &mut self.x
+            }
+            #[inline]
+            fn y_mut(&mut self) -> &mut Self::Scalar {
+                &mut self.y
+            }
         }
         impl Fold<$scalar> for $vec {
             #[inline]
@@ -366,6 +374,18 @@ macro_rules! impl_vec3 {
             #[inline]
             fn z(self) -> Self::Scalar {
                 self.z
+            }
+            #[inline]
+            fn x_mut(&mut self) -> &mut Self::Scalar {
+                &mut self.x
+            }
+            #[inline]
+            fn y_mut(&mut self) -> &mut Self::Scalar {
+                &mut self.y
+            }
+            #[inline]
+            fn z_mut(&mut self) -> &mut Self::Scalar {
+                &mut self.z
             }
         }
         impl Fold<$scalar> for $vec {
