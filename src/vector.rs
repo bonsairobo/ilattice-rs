@@ -23,6 +23,11 @@ pub trait Scalar:
 {
 }
 
+/// Primitive casts, including vectorized casts.
+pub trait PrimitiveCast<T> {
+    fn cast(self) -> T;
+}
+
 /// A vector over the scalar field `Self::Scalar`.
 pub trait Vector:
     'static
@@ -199,8 +204,10 @@ mod integer_vector {
         + ScalarBitwiseLogic<Self::Scalar>
         + VectorBitwiseLogic
         + AllShiftOps<Self::IntScalar>
+        + PrimitiveCast<Self::Float>
     {
         type IntScalar: IntegerScalar;
+        type Float;
 
         #[inline]
         fn all_dimensions_are_powers_of_two(self) -> bool {
@@ -236,29 +243,19 @@ mod integer_vector {
     {
         type UintVec;
     }
-
-    /// Primitive integer casts.
-    pub trait PrimitiveCast<T> {
-        fn cast(self) -> T;
-    }
 }
 pub use integer_vector::*;
 
 mod float_vector {
     use super::*;
 
-    pub trait FloatVector: Vector + RoundingOps + CastInteger {}
-
-    impl<T> FloatVector for T where T: Vector + RoundingOps + CastInteger {}
+    pub trait FloatVector: Vector + RoundingOps + PrimitiveCast<Self::Int> {
+        type Int;
+    }
 
     pub trait RoundingOps {
         fn floor(self) -> Self;
         fn ceil(self) -> Self;
-    }
-
-    pub trait CastInteger {
-        type Int;
-        fn cast_int(self) -> Self::Int;
     }
 }
 pub use float_vector::*;

@@ -344,8 +344,8 @@ where
     #[inline]
     pub fn containing_integer_extent(&self) -> Extent<Vi> {
         Extent::from_min_and_max(
-            self.minimum.floor().cast_int(),
-            self.least_upper_bound().floor().cast_int(),
+            self.minimum.floor().cast(),
+            self.least_upper_bound().floor().cast(),
         )
     }
 }

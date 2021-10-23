@@ -41,9 +41,16 @@ macro_rules! impl_lattice_order {
     };
 }
 
-macro_rules! impl_integer_vec2_with_lattice_partial_ord {
-    ($vec:ident) => {
-        impl PartialOrd for WithLatticeOrd<$vec> {
+macro_rules! impl_integer_vec2 {
+    ($ivec:ident, $fvec:ident, $fscalar:ident) => {
+        impl PrimitiveCast<$fvec> for $ivec {
+            #[inline]
+            fn cast(self: Self) -> $fvec {
+                $fvec::new(self.x as $fscalar, self.y as $fscalar)
+            }
+        }
+
+        impl PartialOrd for WithLatticeOrd<$ivec> {
             #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
                 if self < other {
@@ -80,9 +87,16 @@ macro_rules! impl_integer_vec2_with_lattice_partial_ord {
     };
 }
 
-macro_rules! impl_integer_vec3_with_lattice_partial_ord {
-    ($vec:ident) => {
-        impl PartialOrd for WithLatticeOrd<$vec> {
+macro_rules! impl_integer_vec3 {
+    ($ivec:ident, $fvec:ident, $fscalar:ident) => {
+        impl PrimitiveCast<$fvec> for $ivec {
+            #[inline]
+            fn cast(self) -> $fvec {
+                $fvec::new(self.x as $fscalar, self.y as $fscalar, self.z as $fscalar)
+            }
+        }
+
+        impl PartialOrd for WithLatticeOrd<$ivec> {
             #[inline]
             fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
                 if self < other {
@@ -237,9 +251,10 @@ macro_rules! impl_signed_vector {
 }
 
 macro_rules! impl_integer_vector {
-    ($vec:ident, $dim:literal, $scalar:ident, $uvec:ident, $ones:expr) => {
+    ($vec:ident, $dim:literal, $scalar:ident, $fvec:ident, $uvec:ident, $ones:expr) => {
         impl IntegerVector for $vec {
             type IntScalar = $scalar;
+            type Float = $fvec;
         }
         impl Vector for $vec {
             type Scalar = $scalar;
@@ -265,6 +280,9 @@ macro_rules! impl_integer_vector {
 
 macro_rules! impl_float_vector {
     ($vec:ident, $scalar:ident, $ivec:ident, $ones:expr) => {
+        impl FloatVector for $vec {
+            type Int = $ivec;
+        }
         impl Vector for $vec {
             type Scalar = $scalar;
         }
@@ -296,12 +314,10 @@ macro_rules! impl_float_vector {
 
 macro_rules! impl_float_vec2 {
     ($vec:ident, $ivec:ident, $iscalar:ident) => {
-        impl CastInteger for $vec {
-            type Int = $ivec;
-
+        impl PrimitiveCast<$ivec> for $vec {
             #[inline]
-            fn cast_int(self) -> Self::Int {
-                Self::Int::new(self.x as $iscalar, self.y as $iscalar)
+            fn cast(self) -> $ivec {
+                $ivec::new(self.x as $iscalar, self.y as $iscalar)
             }
         }
     };
@@ -309,12 +325,10 @@ macro_rules! impl_float_vec2 {
 
 macro_rules! impl_float_vec3 {
     ($vec:ident, $ivec:ident, $iscalar:ident) => {
-        impl CastInteger for $vec {
-            type Int = $ivec;
-
+        impl PrimitiveCast<$ivec> for $vec {
             #[inline]
-            fn cast_int(self) -> Self::Int {
-                Self::Int::new(self.x as $iscalar, self.y as $iscalar, self.z as $iscalar)
+            fn cast(self) -> $ivec {
+                $ivec::new(self.x as $iscalar, self.y as $iscalar, self.z as $iscalar)
             }
         }
     };
@@ -423,10 +437,10 @@ macro_rules! impl_vec3 {
 
 // IVec2
 impl_vec2!(IVec2, i32);
-impl_integer_vector!(IVec2, 2, i32, UVec2, const_ivec2!([1; 2]));
+impl_integer_vector!(IVec2, 2, i32, Vec2, UVec2, const_ivec2!([1; 2]));
 impl_signed_vector!(IVec2);
 impl_signed_shift_ops!(IVec2, i32, UVec2);
-impl_integer_vec2_with_lattice_partial_ord!(IVec2);
+impl_integer_vec2!(IVec2, Vec2, f32);
 impl_lattice_order!(IVec2, i32);
 impl Bounded for IVec2 {
     const MIN: Self = const_ivec2!([i32::MIN; 2]);
@@ -435,10 +449,12 @@ impl Bounded for IVec2 {
 
 // IVec3
 impl_vec3!(IVec3, i32);
-impl_integer_vector!(IVec3, 3, i32, UVec3, const_ivec3!([1; 3]));
+// Note: casting to Vec3A is preferred over Vec3
+impl_integer_vector!(IVec3, 3, i32, Vec3A, UVec3, const_ivec3!([1; 3]));
 impl_signed_vector!(IVec3);
 impl_signed_shift_ops!(IVec3, i32, UVec3);
-impl_integer_vec3_with_lattice_partial_ord!(IVec3);
+// Note: casting from Vec3A is preferred over Vec3
+impl_integer_vec3!(IVec3, Vec3A, f32);
 impl_lattice_order!(IVec3, i32);
 impl Bounded for IVec3 {
     const MIN: Self = const_ivec3!([i32::MIN; 3]);
@@ -447,9 +463,9 @@ impl Bounded for IVec3 {
 
 // UVec2
 impl_vec2!(UVec2, u32);
-impl_integer_vector!(UVec2, 2, u32, UVec2, const_uvec2!([1; 2]));
+impl_integer_vector!(UVec2, 2, u32, Vec2, UVec2, const_uvec2!([1; 2]));
 impl_unsigned_shift_ops!(UVec2, u32);
-impl_integer_vec2_with_lattice_partial_ord!(UVec2);
+impl_integer_vec2!(UVec2, Vec2, f32);
 impl_lattice_order!(UVec2, u32);
 impl Bounded for UVec2 {
     const MIN: Self = const_uvec2!([u32::MIN; 2]);
@@ -458,9 +474,11 @@ impl Bounded for UVec2 {
 
 // UVec3
 impl_vec3!(UVec3, u32);
-impl_integer_vector!(UVec3, 3, u32, UVec3, const_uvec3!([1; 3]));
+// Note: casting to Vec3A is preferred over Vec3
+impl_integer_vector!(UVec3, 3, u32, Vec3A, UVec3, const_uvec3!([1; 3]));
 impl_unsigned_shift_ops!(UVec3, u32);
-impl_integer_vec3_with_lattice_partial_ord!(UVec3);
+// Note: casting from Vec3A is preferred over Vec3
+impl_integer_vec3!(UVec3, Vec3A, f32);
 impl_lattice_order!(UVec3, u32);
 impl Bounded for UVec3 {
     const MIN: Self = const_uvec3!([u32::MIN; 3]);
