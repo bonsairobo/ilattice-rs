@@ -1,5 +1,8 @@
 use core::ops::{Add, Div, Mul, Neg, Rem, Sub};
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    ops::{AddAssign, DivAssign, MulAssign, SubAssign},
+};
 
 pub trait Scalar:
     'static
@@ -9,9 +12,13 @@ pub trait Scalar:
     + Zero
     + One
     + Add<Output = Self>
+    + AddAssign
     + Sub<Output = Self>
+    + SubAssign
     + Mul<Output = Self>
+    + MulAssign
     + Div<Output = Self>
+    + DivAssign
     + PartialOrd
 {
 }
