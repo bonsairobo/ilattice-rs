@@ -2,6 +2,8 @@ use crate::vector::*;
 
 use core::ops::{Add, Mul, Shl, Shr, Sub};
 use std::convert::TryInto;
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -272,6 +274,42 @@ where
         y_range.flat_map(move |y| x_range.clone().map(move |x| V::from([x, y])))
     }
 
+    #[cfg(feature = "rayon")]
+    /// Returns a rayon parallel iterator over all points in this 2-dimensional extent.
+    ///
+    /// ```
+    /// # use ilattice::extent::Extent;
+    /// # use rayon::prelude::*;
+    /// # use glam::UVec2;
+    /// let e = Extent::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
+    ///
+    /// let points: Vec<_> = e.par_iter2().collect();
+    ///
+    /// assert_eq!(
+    ///     points,
+    ///     vec![
+    ///         UVec2::new(1, 2),
+    ///         UVec2::new(2, 2),
+    ///         UVec2::new(1, 3),
+    ///         UVec2::new(2, 3)
+    ///     ]
+    /// );
+    /// ```
+    #[inline]
+    pub fn par_iter2(&self) -> impl ParallelIterator<Item = V>
+    where
+        V: Vector2 + Send,
+        V::Scalar: Send + Sync,
+        std::ops::Range<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
+    {
+        let min_x = self.minimum.x();
+        let lub_x = self.least_upper_bound().x();
+
+        (self.minimum.y()..self.least_upper_bound().y())
+            .into_par_iter()
+            .flat_map(move |y| (min_x..lub_x).into_par_iter().map(move |x| V::from([x, y])))
+    }
+
     /// Returns an iterator over all points in this 3-dimensional extent.
     /// ```
     /// # use ilattice::extent::Extent;
@@ -312,6 +350,54 @@ where
                 move |y| x_range.clone().map(move |x| V::from([x, y, z]))
             })
         })
+    }
+
+    #[cfg(feature = "rayon")]
+    /// Returns a rayon parallel iterator over all points in this 3-dimensional extent.
+    /// ```
+    /// # use ilattice::extent::Extent;
+    /// # use rayon::prelude::*;
+    /// # use glam::UVec3;
+    /// let e = Extent::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
+    ///
+    /// let points: Vec<_> = e.par_iter3().collect();
+    ///
+    /// assert_eq!(
+    ///     points,
+    ///     vec![
+    ///         UVec3::new(1, 2, 3),
+    ///         UVec3::new(2, 2, 3),
+    ///         UVec3::new(1, 3, 3),
+    ///         UVec3::new(2, 3, 3),
+    ///         UVec3::new(1, 2, 4),
+    ///         UVec3::new(2, 2, 4),
+    ///         UVec3::new(1, 3, 4),
+    ///         UVec3::new(2, 3, 4)
+    ///     ]
+    /// );
+    /// ```
+    #[inline]
+    pub fn par_iter3(&self) -> impl ParallelIterator<Item = V>
+    where
+        V: Vector3 + Send,
+        V::Scalar: Send + Sync,
+        std::ops::Range<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
+    {
+        let lub = self.least_upper_bound();
+        let min_y = self.minimum.y();
+        let lub_y = lub.y();
+        let min_x = self.minimum.x();
+        let lub_x = lub.x();
+
+        (self.minimum.z()..lub.z())
+            .into_par_iter()
+            .flat_map(move |z| {
+                (min_y..lub_y).into_par_iter().flat_map(move |y| {
+                    (min_x..lub_x)
+                        .into_par_iter()
+                        .map(move |x| V::from([x, y, z]))
+                })
+            })
     }
 
     /// Returns the smallest extent containing all of the given points.
