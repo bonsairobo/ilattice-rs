@@ -2,6 +2,8 @@ use crate::vector::*;
 
 use core::ops::{Add, Mul, Shl, Shr, Sub};
 use std::convert::TryInto;
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
