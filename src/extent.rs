@@ -1,7 +1,7 @@
 use crate::vector::*;
 
 use core::ops::{Add, Mul, Shl, Shr, Sub};
-use std::convert::TryInto;
+
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 
@@ -49,6 +49,14 @@ impl<V> Extent<V> {
     #[inline]
     pub const fn from_min_and_shape(minimum: V, shape: V) -> Self {
         Self { minimum, shape }
+    }
+
+    #[inline]
+    pub fn map_components<T>(&self, f: impl Fn(&V) -> T) -> Extent<T> {
+        Extent {
+            minimum: f(&self.minimum),
+            shape: f(&self.shape),
+        }
     }
 }
 
