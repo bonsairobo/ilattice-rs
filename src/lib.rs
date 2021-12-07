@@ -13,29 +13,29 @@
 //! assert_eq!(
 //!     traversal.take(10).collect::<Vec<_>>(),
 //!     vec![
-//!         const_ivec3!([0, 0, 0]),
-//!         const_ivec3!([0, 0, 1]),
-//!         const_ivec3!([0, -1, 1]),
-//!         const_ivec3!([0, -1, 2]),
-//!         const_ivec3!([1, -1, 2]),
-//!         const_ivec3!([1, -2, 2]),
-//!         const_ivec3!([1, -2, 3]),
-//!         const_ivec3!([1, -2, 4]),
-//!         const_ivec3!([1, -3, 4]),
-//!         const_ivec3!([2, -3, 4]),
+//!         (0.0, const_ivec3!([0, 0, 0])),
+//!         (0.16666667, const_ivec3!([0, 0, 1])),
+//!         (0.25, const_ivec3!([0, -1, 1])),
+//!         (0.5, const_ivec3!([0, -1, 2])),
+//!         (0.5, const_ivec3!([1, -1, 2])),
+//!         (0.75, const_ivec3!([1, -2, 2])),
+//!         (0.8333334, const_ivec3!([1, -2, 3])),
+//!         (1.1666667, const_ivec3!([1, -2, 4])),
+//!         (1.25, const_ivec3!([1, -3, 4])),
+//!         (1.5, const_ivec3!([2, -3, 4])),
 //!     ]
 //! );
 //! ```
 
 pub use ilattice;
 
-use ilattice::prelude::{FloatVector, IntegerVector, SignedVector, Vector2, Vector3};
+use ilattice::prelude::{FloatVector, IntegerVector, SignedVector, Vector, Vector2, Vector3, Zero};
 
 // Note: we need newtypes for 2D and 3D because rust doesn't have specialization to figure out if it should use the `Vector2` or
 // `Vector3` trait impls
 
 /// Visits every pixel intersecting the given 2D ray.
-pub struct GridRayIter2<Vi, Vf> {
+pub struct GridRayIter2<Vi, Vf: Vector> {
     inner: GridRayIter<Vi, Vf>,
 }
 
@@ -53,7 +53,7 @@ where
 }
 
 /// Visits every voxel intersecting the given 3D ray.
-pub struct GridRayIter3<Vi, Vf> {
+pub struct GridRayIter3<Vi, Vf: Vector> {
     inner: GridRayIter<Vi, Vf>,
 }
 
@@ -71,15 +71,31 @@ where
 }
 
 /// The generic type underlying `GridRayIter2` and `GridRayIter3`.
-pub struct GridRayIter<Vi, Vf> {
+pub struct GridRayIter<Vi, Vf: Vector> {
     // The current pixel/voxel position.
     current_grid_point: Vi,
+    entrance_time: <Vf as Vector>::Scalar,
     // Either -1 or +1 in each axis. The direction we step along each axis.
     step: Vi,
     // The amount of time it takes to move 1 unit along each axis.
     t_delta: Vf,
     // The next time when each axis will cross a pixel boundary.
     t_max: Vf,
+}
+
+impl<Vi, Vf: Vector> GridRayIter<Vi, Vf> {
+    #[inline]
+    pub fn entrance_time(&self) -> <Vf as Vector>::Scalar {
+        self.entrance_time
+    }
+
+    #[inline]
+    pub fn current_grid_point(&self) -> Vi
+    where
+        Vi: Clone,
+    {
+        self.current_grid_point.clone()
+    }
 }
 
 impl<Vi, Vf> GridRayIter<Vi, Vf>
@@ -103,6 +119,7 @@ where
 
         Self {
             current_grid_point,
+            entrance_time: <Vf as Vector>::Scalar::ZERO,
             step,
             t_delta,
             t_max,
@@ -119,17 +136,14 @@ where
     #[inline]
     pub fn step2(&mut self) {
         if self.t_max.x() < self.t_max.y() {
+            self.entrance_time = self.t_max.x();
             *self.current_grid_point.x_mut() += self.step.x();
             *self.t_max.x_mut() += self.t_delta.x();
         } else {
+            self.entrance_time = self.t_max.y();
             *self.current_grid_point.y_mut() += self.step.y();
             *self.t_max.y_mut() += self.t_delta.y();
         }
-    }
-
-    #[inline]
-    pub fn current_pixel(&self) -> Vi {
-        self.current_grid_point
     }
 }
 
@@ -143,24 +157,23 @@ where
     pub fn step3(&mut self) {
         if self.t_max.x() < self.t_max.y() {
             if self.t_max.x() < self.t_max.z() {
+                self.entrance_time = self.t_max.x();
                 *self.current_grid_point.x_mut() += self.step.x();
                 *self.t_max.x_mut() += self.t_delta.x();
             } else {
+                self.entrance_time = self.t_max.z();
                 *self.current_grid_point.z_mut() += self.step.z();
                 *self.t_max.z_mut() += self.t_delta.z();
             }
         } else if self.t_max.y() < self.t_max.z() {
+            self.entrance_time = self.t_max.y();
             *self.current_grid_point.y_mut() += self.step.y();
             *self.t_max.y_mut() += self.t_delta.y();
         } else {
+            self.entrance_time = self.t_max.z();
             *self.current_grid_point.z_mut() += self.step.z();
             *self.t_max.z_mut() += self.t_delta.z();
         }
-    }
-
-    #[inline]
-    pub fn current_voxel(&self) -> Vi {
-        self.current_grid_point
     }
 }
 
@@ -169,13 +182,14 @@ where
     Vi: Vector2,
     Vf: Vector2,
 {
-    type Item = Vi;
+    type Item = (<Vf as Vector>::Scalar, Vi);
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let ret = Some(self.inner.current_pixel());
+        let p = self.inner.current_grid_point();
+        let t = self.inner.entrance_time();
         self.inner.step2();
-        ret
+        Some((t, p))
     }
 }
 
@@ -184,13 +198,14 @@ where
     Vi: Vector3,
     Vf: Vector3,
 {
-    type Item = Vi;
+    type Item = (<Vf as Vector>::Scalar, Vi);
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let ret = Some(self.inner.current_voxel());
+        let p = self.inner.current_grid_point();
+        let t = self.inner.entrance_time();
         self.inner.step3();
-        ret
+        Some((t, p))
     }
 }
 
@@ -216,7 +231,7 @@ mod tests {
 
         let mut voxels = Vec::new();
         for _ in 0..5 {
-            voxels.push(traversal.current_voxel());
+            voxels.push(traversal.current_grid_point());
             traversal.step3();
         }
 
@@ -241,7 +256,7 @@ mod tests {
 
         let mut voxels = Vec::new();
         for _ in 0..10 {
-            voxels.push(traversal.current_voxel());
+            voxels.push(traversal.current_grid_point());
             traversal.step3();
         }
 
