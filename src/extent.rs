@@ -249,6 +249,24 @@ where
         lub - V::ONES
     }
 
+    /// Clamps `v` to force in **inside** of the `self` extent.
+    ///
+    /// ```
+    /// # use ilattice::extent::Extent;
+    /// # use glam::IVec2;
+    /// let e = Extent::from_min_and_max(IVec2::new(-1, 5), IVec2::new(2, 10));
+    /// let p_in = IVec2::new(0, 8);
+    /// let p_out = IVec2::new(-4, 20);
+    ///
+    /// assert_eq!(e.clamp(p_in), p_in);
+    /// assert_eq!(e.clamp(p_out), IVec2::new(-1, 10));
+    /// ```
+    #[inline]
+    pub fn clamp(&self, v: V) -> V {
+        v.least_upper_bound(self.minimum)
+            .greatest_lower_bound(self.max())
+    }
+
     /// Returns an iterator over all points in this 2-dimensional extent.
     ///
     /// ```
