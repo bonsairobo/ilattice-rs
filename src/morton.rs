@@ -20,9 +20,17 @@ pub trait EncodeMorton: From<Self::Morton> + Into<Self::Morton> {
 mod impl_unsigned {
     use morton_encoding::{morton_decode, morton_encode};
 
+    #[cfg(feature = "rkyv")]
+    use rkyv::{Archive, Deserialize, Serialize};
+
     macro_rules! impl_unsigned_morton2 {
         ($morton:ident, $store:ident, $scalar:ident) => {
-            #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+            #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+            #[cfg_attr(
+                feature = "rkyv",
+                derive(Archive, Deserialize, Serialize),
+                archive_attr(derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord))
+            )]
             pub struct $morton(pub $store);
 
             impl From<$morton> for [$scalar; 2] {
@@ -43,7 +51,12 @@ mod impl_unsigned {
 
     macro_rules! impl_unsigned_morton3 {
         ($morton:ident, $store:ident, $scalar:ident) => {
-            #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+            #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+            #[cfg_attr(
+                feature = "rkyv",
+                derive(Archive, Deserialize, Serialize),
+                archive_attr(derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord))
+            )]
             pub struct $morton(pub $store);
 
             impl From<$morton> for [$scalar; 3] {
@@ -75,9 +88,17 @@ pub use impl_unsigned::*;
 mod impl_signed {
     use morton_encoding::{morton_decode, morton_encode};
 
+    #[cfg(feature = "rkyv")]
+    use rkyv::{Archive, Deserialize, Serialize};
+
     macro_rules! impl_signed_morton2 {
         ($morton:ident, $store:ident, $scalar:ident, $translate_fn:ident, $untranslate_fn:ident) => {
-            #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+            #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+            #[cfg_attr(
+                feature = "rkyv",
+                derive(Archive, Deserialize, Serialize),
+                archive_attr(derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord))
+            )]
             pub struct $morton(pub $store);
 
             impl From<$morton> for [$scalar; 2] {
@@ -98,7 +119,12 @@ mod impl_signed {
 
     macro_rules! impl_signed_morton3 {
         ($morton:ident, $store:ident, $scalar:ident, $translate_fn:ident, $untranslate_fn:ident) => {
-            #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+            #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
+            #[cfg_attr(
+                feature = "rkyv",
+                derive(Archive, Deserialize, Serialize),
+                archive_attr(derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord))
+            )]
             pub struct $morton(pub $store);
 
             impl From<$morton> for [$scalar; 3] {
