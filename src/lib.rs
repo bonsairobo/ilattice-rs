@@ -22,10 +22,7 @@ pub mod prelude {
     pub use super::vector::*;
 
     #[cfg(feature = "glam")]
-    pub use glam::{
-        const_ivec2, const_ivec3, const_uvec2, const_uvec3, const_vec2, const_vec3, IVec2, IVec3,
-        UVec2, UVec3, Vec2, Vec3A,
-    };
+    pub use glam::{IVec2, IVec3, UVec2, UVec3, Vec2, Vec3A};
 
     #[cfg(feature = "morton-encoding")]
     pub use super::morton::*;

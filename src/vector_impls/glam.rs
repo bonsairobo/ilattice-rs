@@ -4,10 +4,7 @@ use crate::vector::*;
 use crate::morton::{EncodeMorton, Morton2i32, Morton2u32, Morton3i32, Morton3u32};
 
 use core::cmp::Ordering;
-use glam::{
-    const_ivec2, const_ivec3, const_uvec2, const_uvec3, const_vec2, const_vec3, const_vec3a, IVec2,
-    IVec3, UVec2, UVec3, Vec2, Vec3, Vec3A,
-};
+use glam::{IVec2, IVec3, UVec2, UVec3, Vec2, Vec3, Vec3A};
 
 macro_rules! impl_lattice_order {
     ($vec:ident, $scalar:ident) => {
@@ -437,88 +434,88 @@ macro_rules! impl_vec3 {
 
 // IVec2
 impl_vec2!(IVec2, i32);
-impl_integer_vector!(IVec2, 2, i32, Vec2, UVec2, const_ivec2!([1; 2]));
+impl_integer_vector!(IVec2, 2, i32, Vec2, UVec2, IVec2::from_array([1; 2]));
 impl_signed_vector!(IVec2);
 impl_signed_shift_ops!(IVec2, i32, UVec2);
 impl_integer_vec2!(IVec2, Vec2, f32);
 impl_lattice_order!(IVec2, i32);
 impl Bounded for IVec2 {
-    const MIN: Self = const_ivec2!([i32::MIN; 2]);
-    const MAX: Self = const_ivec2!([i32::MAX; 2]);
+    const MIN: Self = IVec2::from_array([i32::MIN; 2]);
+    const MAX: Self = IVec2::from_array([i32::MAX; 2]);
 }
 
 // IVec3
 impl_vec3!(IVec3, i32);
 // Note: casting to Vec3A is preferred over Vec3
-impl_integer_vector!(IVec3, 3, i32, Vec3A, UVec3, const_ivec3!([1; 3]));
+impl_integer_vector!(IVec3, 3, i32, Vec3A, UVec3, IVec3::from_array([1; 3]));
 impl_signed_vector!(IVec3);
 impl_signed_shift_ops!(IVec3, i32, UVec3);
 // Note: casting from Vec3A is preferred over Vec3
 impl_integer_vec3!(IVec3, Vec3A, f32);
 impl_lattice_order!(IVec3, i32);
 impl Bounded for IVec3 {
-    const MIN: Self = const_ivec3!([i32::MIN; 3]);
-    const MAX: Self = const_ivec3!([i32::MAX; 3]);
+    const MIN: Self = IVec3::from_array([i32::MIN; 3]);
+    const MAX: Self = IVec3::from_array([i32::MAX; 3]);
 }
 
 // UVec2
 impl_vec2!(UVec2, u32);
-impl_integer_vector!(UVec2, 2, u32, Vec2, UVec2, const_uvec2!([1; 2]));
+impl_integer_vector!(UVec2, 2, u32, Vec2, UVec2, UVec2::from_array([1; 2]));
 impl_unsigned_shift_ops!(UVec2, u32);
 impl_integer_vec2!(UVec2, Vec2, f32);
 impl_lattice_order!(UVec2, u32);
 impl Bounded for UVec2 {
-    const MIN: Self = const_uvec2!([u32::MIN; 2]);
-    const MAX: Self = const_uvec2!([u32::MAX; 2]);
+    const MIN: Self = UVec2::from_array([u32::MIN; 2]);
+    const MAX: Self = UVec2::from_array([u32::MAX; 2]);
 }
 
 // UVec3
 impl_vec3!(UVec3, u32);
 // Note: casting to Vec3A is preferred over Vec3
-impl_integer_vector!(UVec3, 3, u32, Vec3A, UVec3, const_uvec3!([1; 3]));
+impl_integer_vector!(UVec3, 3, u32, Vec3A, UVec3, UVec3::from_array([1; 3]));
 impl_unsigned_shift_ops!(UVec3, u32);
 // Note: casting from Vec3A is preferred over Vec3
 impl_integer_vec3!(UVec3, Vec3A, f32);
 impl_lattice_order!(UVec3, u32);
 impl Bounded for UVec3 {
-    const MIN: Self = const_uvec3!([u32::MIN; 3]);
-    const MAX: Self = const_uvec3!([u32::MAX; 3]);
+    const MIN: Self = UVec3::from_array([u32::MIN; 3]);
+    const MAX: Self = UVec3::from_array([u32::MAX; 3]);
 }
 
 // Vec2
 impl_vec2!(Vec2, f32);
-impl_float_vector!(Vec2, f32, IVec2, const_vec2!([1.0; 2]));
+impl_float_vector!(Vec2, f32, IVec2, Vec2::from_array([1.0; 2]));
 impl_float_vec2!(Vec2, IVec2, i32);
 impl_signed_vector!(Vec2);
 impl_float_vec2_with_lattice_partial_ord!(Vec2);
 impl_lattice_order!(Vec2, f32);
 impl Bounded for Vec2 {
-    const MIN: Self = const_vec2!([f32::MIN; 2]);
-    const MAX: Self = const_vec2!([f32::MAX; 2]);
+    const MIN: Self = Vec2::from_array([f32::MIN; 2]);
+    const MAX: Self = Vec2::from_array([f32::MAX; 2]);
 }
 
 // Vec3
 impl_vec3!(Vec3, f32);
-impl_float_vector!(Vec3, f32, IVec3, const_vec3!([1.0; 3]));
+impl_float_vector!(Vec3, f32, IVec3, Vec3::from_array([1.0; 3]));
 impl_float_vec3!(Vec3, IVec3, i32);
 impl_signed_vector!(Vec3);
 impl_float_vec3_with_lattice_partial_ord!(Vec3);
 impl_lattice_order!(Vec3, f32);
 impl Bounded for Vec3 {
-    const MIN: Self = const_vec3!([f32::MIN; 3]);
-    const MAX: Self = const_vec3!([f32::MAX; 3]);
+    const MIN: Self = Vec3::from_array([f32::MIN; 3]);
+    const MAX: Self = Vec3::from_array([f32::MAX; 3]);
 }
 
 // Vec3A
 impl_vec3!(Vec3A, f32);
-impl_float_vector!(Vec3A, f32, IVec3, const_vec3a!([1.0; 3]));
+impl_float_vector!(Vec3A, f32, IVec3, Vec3A::from_array([1.0; 3]));
 impl_float_vec3!(Vec3A, IVec3, i32);
 impl_signed_vector!(Vec3A);
 impl_float_vec3_with_lattice_partial_ord!(Vec3A);
 impl_lattice_order!(Vec3A, f32);
 impl Bounded for Vec3A {
-    const MIN: Self = const_vec3a!([f32::MIN; 3]);
-    const MAX: Self = const_vec3a!([f32::MAX; 3]);
+    const MIN: Self = Vec3A::from_array([f32::MIN; 3]);
+    const MAX: Self = Vec3A::from_array([f32::MAX; 3]);
 }
 
 #[cfg(feature = "morton-encoding")]
