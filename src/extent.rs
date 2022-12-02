@@ -203,6 +203,60 @@ where
             V::from([lub.x(), lub.y(), lub.z()]),
         ]
     }
+
+    #[inline]
+    pub fn split2(&self, split: V) -> [Self; 4]
+    where
+        V: Vector2,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+
+        [
+            Self::from_min_and_lub(min, split),
+            Self::from_min_and_lub(V::from([split.x(), min.y()]), V::from([lub.x(), split.y()])),
+            Self::from_min_and_lub(V::from([min.x(), split.y()]), V::from([split.x(), lub.y()])),
+            Self::from_min_and_lub(split, lub),
+        ]
+    }
+
+    #[inline]
+    pub fn split3(&self, split: V) -> [Self; 8]
+    where
+        V: Vector3,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+
+        [
+            Self::from_min_and_lub(min, split),
+            Self::from_min_and_lub(
+                V::from([split.x(), min.y(), min.z()]),
+                V::from([lub.x(), split.y(), split.z()]),
+            ),
+            Self::from_min_and_lub(
+                V::from([min.x(), split.y(), min.z()]),
+                V::from([split.x(), lub.y(), split.z()]),
+            ),
+            Self::from_min_and_lub(
+                V::from([split.x(), split.y(), min.z()]),
+                V::from([lub.x(), lub.y(), split.z()]),
+            ),
+            Self::from_min_and_lub(
+                V::from([min.x(), min.y(), split.z()]),
+                V::from([split.x(), split.y(), lub.z()]),
+            ),
+            Self::from_min_and_lub(
+                V::from([split.x(), min.y(), split.z()]),
+                V::from([lub.x(), split.y(), lub.z()]),
+            ),
+            Self::from_min_and_lub(
+                V::from([min.x(), split.y(), split.z()]),
+                V::from([split.x(), lub.y(), lub.z()]),
+            ),
+            Self::from_min_and_lub(split, lub),
+        ]
+    }
 }
 
 impl<V> Extent<V>
