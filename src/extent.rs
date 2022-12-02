@@ -257,6 +257,16 @@ where
             Self::from_min_and_lub(split, lub),
         ]
     }
+
+    pub fn surface_area3(&self) -> V::Scalar
+    where
+        V: Vector3,
+    {
+        (V::Scalar::ONE + V::Scalar::ONE)
+            * (self.shape.x() * self.shape.y()
+                + self.shape.y() * self.shape.z()
+                + self.shape.z() * self.shape.x())
+    }
 }
 
 impl<V> Extent<V>
