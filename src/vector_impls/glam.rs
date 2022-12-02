@@ -278,6 +278,7 @@ macro_rules! impl_integer_vector {
 macro_rules! impl_float_vector {
     ($vec:ident, $scalar:ident, $ivec:ident, $ones:expr) => {
         impl FloatVector for $vec {
+            type FloatScalar = $scalar;
             type Int = $ivec;
         }
         impl Vector for $vec {

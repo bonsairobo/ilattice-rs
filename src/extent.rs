@@ -501,6 +501,16 @@ where
     }
 }
 
+impl<Vf> Extent<Vf>
+where
+    Vf: FloatVector,
+{
+    pub fn center(&self) -> Vf {
+        let one = Vf::FloatScalar::ONE;
+        self.minimum + self.shape / (one + one)
+    }
+}
+
 impl<Vf, Vi> Extent<Vf>
 where
     Vf: FloatVector<Int = Vi>,

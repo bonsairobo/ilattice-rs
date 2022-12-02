@@ -249,7 +249,10 @@ pub use integer_vector::*;
 mod float_vector {
     use super::*;
 
-    pub trait FloatVector: Vector + RoundingOps + PrimitiveCast<Self::Int> {
+    pub trait FloatVector:
+        Vector<Scalar = Self::FloatScalar> + RoundingOps + PrimitiveCast<Self::Int>
+    {
+        type FloatScalar: Scalar;
         type Int;
     }
 
