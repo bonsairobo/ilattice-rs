@@ -45,6 +45,23 @@ where
 impl<V> Eq for Extent<V> where V: Eq {}
 
 impl<V> Extent<V> {
+    pub const EDGES2: [[usize; 2]; 4] = [[0b00, 0b01], [0b00, 0b10], [0b01, 0b11], [0b10, 0b11]];
+
+    pub const EDGES3: [[usize; 2]; 12] = [
+        [0b000, 0b001],
+        [0b000, 0b010],
+        [0b000, 0b100],
+        [0b001, 0b011],
+        [0b001, 0b101],
+        [0b010, 0b011],
+        [0b010, 0b110],
+        [0b100, 0b101],
+        [0b100, 0b110],
+        [0b110, 0b111],
+        [0b101, 0b111],
+        [0b011, 0b111],
+    ];
+
     /// The default representation of an extent as the minimum point and shape.
     #[inline]
     pub const fn from_min_and_shape(minimum: V, shape: V) -> Self {
