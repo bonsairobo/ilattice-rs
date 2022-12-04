@@ -258,6 +258,66 @@ where
         ]
     }
 
+    #[inline]
+    pub fn split2_single(&self, split: V, quadrant: u8) -> Self
+    where
+        V: Vector2,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+        let all_coords = [min.x(), min.y(), split.x(), split.y(), lub.x(), lub.y()];
+
+        // Corresponds to the coordinate permutation in split2.
+        const LUT: [[usize; 4]; 8] = [
+            [0, 1, 2, 3],
+            [2, 1, 4, 3],
+            [0, 3, 2, 5],
+            [2, 3, 4, 5],
+            [0, 1, 2, 3],
+            [2, 1, 4, 3],
+            [0, 3, 2, 5],
+            [2, 3, 4, 5],
+        ];
+        let [mx, my, lx, ly] = LUT[quadrant as usize].map(|i| all_coords[i]);
+
+        Self::from_min_and_lub(V::from([mx, my]), V::from([lx, ly]))
+    }
+
+    #[inline]
+    pub fn split3_single(&self, split: V, octant: u8) -> Self
+    where
+        V: Vector3,
+    {
+        let min = self.minimum;
+        let lub = self.least_upper_bound();
+        let all_coords = [
+            min.x(),
+            min.y(),
+            min.z(),
+            split.x(),
+            split.y(),
+            split.z(),
+            lub.x(),
+            lub.y(),
+            lub.z(),
+        ];
+
+        // Corresponds to the coordinate permutation in split3.
+        const LUT: [[usize; 6]; 8] = [
+            [0, 1, 2, 3, 4, 5],
+            [3, 1, 2, 6, 4, 5],
+            [0, 4, 2, 3, 7, 5],
+            [3, 4, 2, 6, 7, 5],
+            [0, 1, 5, 3, 4, 8],
+            [3, 1, 5, 6, 4, 8],
+            [0, 4, 5, 3, 7, 8],
+            [3, 4, 5, 6, 7, 8],
+        ];
+        let [mx, my, mz, lx, ly, lz] = LUT[octant as usize].map(|i| all_coords[i]);
+
+        Self::from_min_and_lub(V::from([mx, my, mz]), V::from([lx, ly, lz]))
+    }
+
     pub fn surface_area3(&self) -> V::Scalar
     where
         V: Vector3,
@@ -611,5 +671,31 @@ where
             minimum: self.minimum >> rhs,
             shape: self.shape >> rhs,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use glam::{Vec2, Vec3};
+
+    use super::*;
+
+    #[test]
+    fn splits_are_consistent() {
+        let e = Extent::from_min_and_lub(Vec2::new(0.0, 1.0), Vec2::new(3.0, 4.0));
+        let split_at = Vec2::new(2.0, 3.0);
+
+        assert_eq!(
+            e.split2(split_at),
+            [0, 1, 2, 3].map(|quadrant| e.split2_single(split_at, quadrant))
+        );
+
+        let e = Extent::from_min_and_lub(Vec3::new(0.0, 1.0, 2.0), Vec3::new(6.0, 7.0, 8.0));
+        let split_at = Vec3::new(3.0, 4.0, 5.0);
+
+        assert_eq!(
+            e.split3(split_at),
+            [0, 1, 2, 3, 4, 5, 6, 7].map(|octant| e.split3_single(split_at, octant))
+        );
     }
 }
