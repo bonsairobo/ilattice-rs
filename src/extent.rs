@@ -344,6 +344,12 @@ where
                 + self.shape.y() * self.shape.z()
                 + self.shape.z() * self.shape.x())
     }
+
+    #[inline]
+    pub fn clamp_min_lub(&self, v: V) -> V {
+        v.least_upper_bound(self.minimum)
+            .greatest_lower_bound(self.least_upper_bound())
+    }
 }
 
 impl<V> Extent<V>
@@ -403,7 +409,7 @@ where
     /// assert_eq!(e.clamp(p_out), IVec2::new(-1, 10));
     /// ```
     #[inline]
-    pub fn clamp(&self, v: V) -> V {
+    pub fn clamp_min_max(&self, v: V) -> V {
         v.least_upper_bound(self.minimum)
             .greatest_lower_bound(self.max())
     }
