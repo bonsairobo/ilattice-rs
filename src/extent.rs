@@ -405,8 +405,8 @@ where
     /// let p_in = IVec2::new(0, 8);
     /// let p_out = IVec2::new(-4, 20);
     ///
-    /// assert_eq!(e.clamp(p_in), p_in);
-    /// assert_eq!(e.clamp(p_out), IVec2::new(-1, 10));
+    /// assert_eq!(e.clamp_min_max(p_in), p_in);
+    /// assert_eq!(e.clamp_min_max(p_out), IVec2::new(-1, 10));
     /// ```
     #[inline]
     pub fn clamp_min_max(&self, v: V) -> V {
