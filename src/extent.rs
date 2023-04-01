@@ -1,7 +1,4 @@
-use crate::vector::{
-    FloatVector, Fold, IntegerVector, LatticeOrder, Map, One, Ones, PrimitiveCast, RoundingOps,
-    Splat, Vector, Vector2, Vector3, Zero,
-};
+use crate::vector::{FloatVector, IntegerVector, One, Vector, Vector2, Vector3};
 
 use core::ops::{Add, Mul, Shl, Shr, Sub};
 

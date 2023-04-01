@@ -178,7 +178,7 @@ mod signed_vector {
 pub use signed_vector::*;
 
 mod integer_vector {
-    use super::{Fold, PrimitiveCast, Scalar, Vector};
+    use super::{PrimitiveCast, Scalar, Vector};
 
     use core::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
     use std::convert::TryInto;
