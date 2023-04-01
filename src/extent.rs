@@ -93,13 +93,13 @@ where
 
     /// Translate the extent such that it has `new_min` as it's new minimum.
     #[inline]
-    pub fn with_minimum(&self, new_min: V) -> Self {
+    pub const fn with_minimum(&self, new_min: V) -> Self {
         Self::from_min_and_shape(new_min, self.shape)
     }
 
     /// Resize the extent such that it has `new_shape` as it's new shape.
     #[inline]
-    pub fn with_shape(&self, new_shape: V) -> Self {
+    pub const fn with_shape(&self, new_shape: V) -> Self {
         Self::from_min_and_shape(self.minimum, new_shape)
     }
 
@@ -136,7 +136,7 @@ where
     /// Returns `Some(self)` iff this extent has a positive shape, otherise `None`.
     #[inline]
     pub fn check_positive_shape(self) -> Option<Self> {
-        self.shape.is_positive().then(|| self)
+        self.shape.is_positive().then_some(self)
     }
 
     /// Returns the extent containing only the points in both `self` and `other`.
@@ -335,6 +335,8 @@ where
         Self::from_min_and_lub(V::from([mx, my, mz]), V::from([lx, ly, lz]))
     }
 
+    #[allow(clippy::suspicious_operation_groupings)]
+    #[inline]
     pub fn surface_area3(&self) -> V::Scalar
     where
         V: Vector3,
@@ -376,11 +378,16 @@ where
     #[inline]
     pub fn num_points(&self) -> u64 {
         let volume = self.volume();
-        match volume.try_into() {
-            Ok(n) => n,
-            Err(_) => panic!("Failed to convert {:?} to u64", volume),
-        }
+        volume.try_into().map_or_else(|_| panic!("Failed to convert {:?} to u64", volume), |n| n)
     }
+
+    /// The number of points contained in the extent. Doesn't `panic`
+    #[inline]
+    pub fn checked_num_points(&self) -> Option<u64> {
+        let volume = self.volume();
+        volume.try_into().ok()
+    }
+
 
     /// Returns `true` iff `self.num_points() == 0`.
     #[inline]
@@ -590,7 +597,7 @@ where
             max_point = max_point.least_upper_bound(v);
         }
 
-        Extent::from_min_and_max(min_point, max_point)
+        Self::from_min_and_max(min_point, max_point)
     }
 }
 
@@ -598,6 +605,7 @@ impl<Vf> Extent<Vf>
 where
     Vf: FloatVector,
 {
+    #[inline]
     pub fn center(&self) -> Vf {
         let one = Vf::FloatScalar::ONE;
         self.minimum + self.shape / (one + one)
@@ -627,7 +635,7 @@ where
 
     #[inline]
     fn add(self, rhs: V) -> Self::Output {
-        Extent {
+        Self {
             minimum: self.minimum + rhs,
             shape: self.shape,
         }
@@ -642,7 +650,7 @@ where
 
     #[inline]
     fn sub(self, rhs: V) -> Self::Output {
-        Extent {
+        Self {
             minimum: self.minimum - rhs,
             shape: self.shape,
         }
@@ -658,7 +666,7 @@ where
 
     #[inline]
     fn mul(self, rhs: Rhs) -> Self::Output {
-        Extent {
+        Self {
             minimum: self.minimum * rhs,
             shape: self.shape * rhs,
         }
@@ -674,7 +682,7 @@ where
 
     #[inline]
     fn shl(self, rhs: Rhs) -> Self::Output {
-        Extent {
+        Self {
             minimum: self.minimum << rhs,
             shape: self.shape << rhs,
         }
@@ -690,7 +698,7 @@ where
 
     #[inline]
     fn shr(self, rhs: Rhs) -> Self::Output {
-        Extent {
+        Self {
             minimum: self.minimum >> rhs,
             shape: self.shape >> rhs,
         }

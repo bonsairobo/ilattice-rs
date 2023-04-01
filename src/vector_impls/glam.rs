@@ -441,8 +441,8 @@ impl_signed_shift_ops!(IVec2, i32, UVec2);
 impl_integer_vec2!(IVec2, Vec2, f32);
 impl_lattice_order!(IVec2, i32);
 impl Bounded for IVec2 {
-    const MIN: Self = IVec2::from_array([i32::MIN; 2]);
-    const MAX: Self = IVec2::from_array([i32::MAX; 2]);
+    const MIN: Self = Self::from_array([i32::MIN; 2]);
+    const MAX: Self = Self::from_array([i32::MAX; 2]);
 }
 
 // IVec3
@@ -455,8 +455,8 @@ impl_signed_shift_ops!(IVec3, i32, UVec3);
 impl_integer_vec3!(IVec3, Vec3A, f32);
 impl_lattice_order!(IVec3, i32);
 impl Bounded for IVec3 {
-    const MIN: Self = IVec3::from_array([i32::MIN; 3]);
-    const MAX: Self = IVec3::from_array([i32::MAX; 3]);
+    const MIN: Self = Self::from_array([i32::MIN; 3]);
+    const MAX: Self = Self::from_array([i32::MAX; 3]);
 }
 
 // UVec2
@@ -466,8 +466,8 @@ impl_unsigned_shift_ops!(UVec2, u32);
 impl_integer_vec2!(UVec2, Vec2, f32);
 impl_lattice_order!(UVec2, u32);
 impl Bounded for UVec2 {
-    const MIN: Self = UVec2::from_array([u32::MIN; 2]);
-    const MAX: Self = UVec2::from_array([u32::MAX; 2]);
+    const MIN: Self = Self::from_array([u32::MIN; 2]);
+    const MAX: Self = Self::from_array([u32::MAX; 2]);
 }
 
 // UVec3
@@ -479,8 +479,8 @@ impl_unsigned_shift_ops!(UVec3, u32);
 impl_integer_vec3!(UVec3, Vec3A, f32);
 impl_lattice_order!(UVec3, u32);
 impl Bounded for UVec3 {
-    const MIN: Self = UVec3::from_array([u32::MIN; 3]);
-    const MAX: Self = UVec3::from_array([u32::MAX; 3]);
+    const MIN: Self = Self::from_array([u32::MIN; 3]);
+    const MAX: Self = Self::from_array([u32::MAX; 3]);
 }
 
 // Vec2
@@ -491,8 +491,8 @@ impl_signed_vector!(Vec2);
 impl_float_vec2_with_lattice_partial_ord!(Vec2);
 impl_lattice_order!(Vec2, f32);
 impl Bounded for Vec2 {
-    const MIN: Self = Vec2::from_array([f32::MIN; 2]);
-    const MAX: Self = Vec2::from_array([f32::MAX; 2]);
+    const MIN: Self = Self::from_array([f32::MIN; 2]);
+    const MAX: Self = Self::from_array([f32::MAX; 2]);
 }
 
 // Vec3
@@ -503,8 +503,8 @@ impl_signed_vector!(Vec3);
 impl_float_vec3_with_lattice_partial_ord!(Vec3);
 impl_lattice_order!(Vec3, f32);
 impl Bounded for Vec3 {
-    const MIN: Self = Vec3::from_array([f32::MIN; 3]);
-    const MAX: Self = Vec3::from_array([f32::MAX; 3]);
+    const MIN: Self = Self::from_array([f32::MIN; 3]);
+    const MAX: Self = Self::from_array([f32::MAX; 3]);
 }
 
 // Vec3A
@@ -515,8 +515,8 @@ impl_signed_vector!(Vec3A);
 impl_float_vec3_with_lattice_partial_ord!(Vec3A);
 impl_lattice_order!(Vec3A, f32);
 impl Bounded for Vec3A {
-    const MIN: Self = Vec3A::from_array([f32::MIN; 3]);
-    const MAX: Self = Vec3A::from_array([f32::MAX; 3]);
+    const MIN: Self = Self::from_array([f32::MIN; 3]);
+    const MAX: Self = Self::from_array([f32::MAX; 3]);
 }
 
 #[cfg(feature = "morton-encoding")]
