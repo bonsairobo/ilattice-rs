@@ -1,6 +1,6 @@
 [package]
 name = "ilattice"
-version = "0.3.0"
+version = "0.4.0"
 description = "2 and 3-dimensional integer lattice math."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/bonsairobo/ilattice-rs"
