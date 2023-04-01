@@ -1,4 +1,7 @@
-use crate::vector::{FloatVector, Fold, IntegerVector, LatticeOrder, Map, One, Ones, PrimitiveCast, RoundingOps, Splat, Vector, Vector2, Vector3, Zero};
+use crate::vector::{
+    FloatVector, Fold, IntegerVector, LatticeOrder, Map, One, Ones, PrimitiveCast, RoundingOps,
+    Splat, Vector, Vector2, Vector3, Zero,
+};
 
 use core::ops::{Add, Mul, Shl, Shr, Sub};
 
@@ -378,7 +381,9 @@ where
     #[inline]
     pub fn num_points(&self) -> u64 {
         let volume = self.volume();
-        volume.try_into().map_or_else(|_| panic!("Failed to convert {volume:?} to u64"), |n| n)
+        volume
+            .try_into()
+            .map_or_else(|_| panic!("Failed to convert {volume:?} to u64"), |n| n)
     }
 
     /// The number of points contained in the extent. Doesn't `panic`
@@ -387,7 +392,6 @@ where
         let volume = self.volume();
         volume.try_into().ok()
     }
-
 
     /// Returns `true` iff `self.num_points() == 0`.
     #[inline]
