@@ -28,14 +28,13 @@ jobs:
     - name: FMT
       run: cargo fmt -- --check
 
-  clippy:
+  clippy_check:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - uses: actions/checkout@v2
-    - name: Install alsa and udev
-      run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
-    - name: install-clippy
-      run: rustup component add clippy
-    - name: clippy
-      run: cargo clippy -- -W clippy::all -W clippy::nursery --deny "warnings"
+      - uses: actions/checkout@v1
+      - run: rustup component add clippy
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features -- -W clippy::all -W clippy::nursery --deny "warnings"
