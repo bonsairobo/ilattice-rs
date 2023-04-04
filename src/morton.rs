@@ -155,27 +155,27 @@ mod impl_signed {
     impl_signed_morton3!(Morton3i16, u64, i16, translate_i16, untranslate_i16);
     impl_signed_morton3!(Morton3i32, u128, i32, translate_i32, untranslate_i32);
 
-    fn translate_i8(x: i8) -> u8 {
+    const fn translate_i8(x: i8) -> u8 {
         x.wrapping_sub(i8::MIN) as u8
     }
 
-    fn translate_i16(x: i16) -> u16 {
+    const fn translate_i16(x: i16) -> u16 {
         x.wrapping_sub(i16::MIN) as u16
     }
 
-    fn translate_i32(x: i32) -> u32 {
+    const fn translate_i32(x: i32) -> u32 {
         x.wrapping_sub(i32::MIN) as u32
     }
 
-    fn untranslate_i8(x: u8) -> i8 {
+    const fn untranslate_i8(x: u8) -> i8 {
         (x as i8).wrapping_add(i8::MIN)
     }
 
-    fn untranslate_i16(x: u16) -> i16 {
+    const fn untranslate_i16(x: u16) -> i16 {
         (x as i16).wrapping_add(i16::MIN)
     }
 
-    fn untranslate_i32(x: u32) -> i32 {
+    const fn untranslate_i32(x: u32) -> i32 {
         (x as i32).wrapping_add(i32::MIN)
     }
 }

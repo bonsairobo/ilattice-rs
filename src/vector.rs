@@ -165,7 +165,7 @@ pub trait Bounded {
 }
 
 mod signed_vector {
-    use super::*;
+    use super::{Neg, Vector};
 
     pub trait SignedVector: Vector + Abs + Neg {
         fn signum(self) -> Self;
@@ -178,7 +178,7 @@ mod signed_vector {
 pub use signed_vector::*;
 
 mod integer_vector {
-    use super::*;
+    use super::{PrimitiveCast, Scalar, Vector};
 
     use core::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
     use std::convert::TryInto;
@@ -247,7 +247,7 @@ mod integer_vector {
 pub use integer_vector::*;
 
 mod float_vector {
-    use super::*;
+    use super::{PrimitiveCast, Scalar, Vector};
 
     pub trait FloatVector:
         Vector<Scalar = Self::FloatScalar> + RoundingOps + PrimitiveCast<Self::Int>
@@ -264,7 +264,7 @@ mod float_vector {
 pub use float_vector::*;
 
 mod scalar_impl {
-    use super::*;
+    use super::{Bounded, IntegerScalar, One, PrimitiveCast, Scalar, Zero};
 
     macro_rules! impl_integer_scalar {
         ($t:ident) => {
