@@ -1,4 +1,5 @@
 [workspace]
 members = [
+    'crates/grid-ray',
     'crates/ilattice',
 ]
