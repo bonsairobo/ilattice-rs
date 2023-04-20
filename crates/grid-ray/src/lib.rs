@@ -4,25 +4,25 @@
 //!
 //! ```
 //! use grid_ray::GridRayIter3;
-//! use grid_ray::ilattice::glam::{const_ivec3, const_vec3a};
+//! use grid_ray::ilattice::glam::{IVec3, Vec3A};
 //!
-//! let start = const_vec3a!([0.5, 0.5, 0.5]);
-//! let direction = const_vec3a!([1.0, -2.0, 3.0]);
+//! let start = Vec3A::from_array([0.5, 0.5, 0.5]);
+//! let direction = Vec3A::from_array([1.0, -2.0, 3.0]);
 //! let mut traversal = GridRayIter3::new(start, direction);
 //!
 //! assert_eq!(
 //!     traversal.take(10).collect::<Vec<_>>(),
 //!     vec![
-//!         (0.0, const_ivec3!([0, 0, 0])),
-//!         (0.16666667, const_ivec3!([0, 0, 1])),
-//!         (0.25, const_ivec3!([0, -1, 1])),
-//!         (0.5, const_ivec3!([0, -1, 2])),
-//!         (0.5, const_ivec3!([1, -1, 2])),
-//!         (0.75, const_ivec3!([1, -2, 2])),
-//!         (0.8333334, const_ivec3!([1, -2, 3])),
-//!         (1.1666667, const_ivec3!([1, -2, 4])),
-//!         (1.25, const_ivec3!([1, -3, 4])),
-//!         (1.5, const_ivec3!([2, -3, 4])),
+//!         (0.0, IVec3::from_array([0, 0, 0])),
+//!         (0.16666667, IVec3::from_array([0, 0, 1])),
+//!         (0.25, IVec3::from_array([0, -1, 1])),
+//!         (0.5, IVec3::from_array([0, -1, 2])),
+//!         (0.5, IVec3::from_array([1, -1, 2])),
+//!         (0.75, IVec3::from_array([1, -2, 2])),
+//!         (0.8333334, IVec3::from_array([1, -2, 3])),
+//!         (1.1666667, IVec3::from_array([1, -2, 4])),
+//!         (1.25, IVec3::from_array([1, -3, 4])),
+//!         (1.5, IVec3::from_array([2, -3, 4])),
 //!     ]
 //! );
 //! ```
@@ -218,14 +218,14 @@ where
 
 #[cfg(test)]
 mod tests {
-    use ilattice::glam::{const_ivec3, const_vec3a};
+    use ilattice::glam::{IVec3, Vec3A};
 
     use super::*;
 
     #[test]
     fn test_move_along_x_axis() {
         let mut traversal =
-            GridRayIter::new(const_vec3a!([0.5, 0.5, 0.5]), const_vec3a!([1.0, 0.0, 0.0]));
+            GridRayIter::new(Vec3A::from_array([0.5, 0.5, 0.5]), Vec3A::from_array([1.0, 0.0, 0.0]));
 
         println!("STEP = {:?}", traversal.t_max);
 
@@ -238,11 +238,11 @@ mod tests {
         assert_eq!(
             voxels,
             vec![
-                const_ivec3!([0, 0, 0]),
-                const_ivec3!([1, 0, 0]),
-                const_ivec3!([2, 0, 0]),
-                const_ivec3!([3, 0, 0]),
-                const_ivec3!([4, 0, 0])
+                IVec3::from_array([0, 0, 0]),
+                IVec3::from_array([1, 0, 0]),
+                IVec3::from_array([2, 0, 0]),
+                IVec3::from_array([3, 0, 0]),
+                IVec3::from_array([4, 0, 0])
             ]
         )
     }
@@ -250,8 +250,8 @@ mod tests {
     #[test]
     fn test_move_along_all_axes_some_negative() {
         let mut traversal = GridRayIter::new(
-            const_vec3a!([0.5, 0.5, 0.5]),
-            const_vec3a!([1.0, -2.0, 3.0]),
+            Vec3A::from_array([0.5, 0.5, 0.5]),
+            Vec3A::from_array([1.0, -2.0, 3.0]),
         );
 
         let mut voxels = Vec::new();
@@ -263,16 +263,16 @@ mod tests {
         assert_eq!(
             voxels,
             vec![
-                const_ivec3!([0, 0, 0]),
-                const_ivec3!([0, 0, 1]),
-                const_ivec3!([0, -1, 1]),
-                const_ivec3!([0, -1, 2]),
-                const_ivec3!([1, -1, 2]),
-                const_ivec3!([1, -2, 2]),
-                const_ivec3!([1, -2, 3]),
-                const_ivec3!([1, -2, 4]),
-                const_ivec3!([1, -3, 4]),
-                const_ivec3!([2, -3, 4]),
+                IVec3::from_array([0, 0, 0]),
+                IVec3::from_array([0, 0, 1]),
+                IVec3::from_array([0, -1, 1]),
+                IVec3::from_array([0, -1, 2]),
+                IVec3::from_array([1, -1, 2]),
+                IVec3::from_array([1, -2, 2]),
+                IVec3::from_array([1, -2, 3]),
+                IVec3::from_array([1, -2, 4]),
+                IVec3::from_array([1, -3, 4]),
+                IVec3::from_array([2, -3, 4]),
             ]
         )
     }

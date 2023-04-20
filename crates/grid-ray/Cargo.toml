@@ -9,4 +9,4 @@ default = ["glam"]
 glam = ["ilattice/glam"]
 
 [dependencies]
-ilattice = { git = "https://github.com/bonsairobo/ilattice-rs", rev = "30b6b463", default-features = false }
+ilattice = { git = "https://github.com/bonsairobo/ilattice-rs", rev = "9f76041793bb49de30daaaad758b9c9095f93e51", default-features = false }
