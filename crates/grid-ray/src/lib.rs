@@ -224,8 +224,10 @@ mod tests {
 
     #[test]
     fn test_move_along_x_axis() {
-        let mut traversal =
-            GridRayIter::new(Vec3A::from_array([0.5, 0.5, 0.5]), Vec3A::from_array([1.0, 0.0, 0.0]));
+        let mut traversal = GridRayIter::new(
+            Vec3A::from_array([0.5, 0.5, 0.5]),
+            Vec3A::from_array([1.0, 0.0, 0.0]),
+        );
 
         println!("STEP = {:?}", traversal.t_max);
 
