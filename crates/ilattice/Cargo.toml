@@ -1,0 +1,23 @@
+[package]
+name = "ilattice"
+version = "0.4.0"
+description = "2 and 3-dimensional integer lattice math."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/bonsairobo/ilattice-rs"
+edition = "2021"
+keywords = ["vector", "integer", "math", "3D", "morton"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = ["glam"] # The default vector impls.
+
+[dependencies]
+glam = { version = "0.23", optional = true }
+morton-encoding = { version = "2.0", optional = true }
+serde = { version = "1.0", optional = true, features = ["derive"] }
+rayon = { version = "1.5", optional = true }
+
+
+rkyv = { version = "0.7", optional = true }
