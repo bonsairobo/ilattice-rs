@@ -13,6 +13,7 @@
 
 // NOTE: The morton-encoding crate interprets arrays as [z, y, x], but we reverse that order to [x, y, z].
 
+/// Infallible conversions between a vector and a Morton code.
 pub trait EncodeMorton: From<Self::Morton> + Into<Self::Morton> {
     /// The Morton code (Z order) for this vector.
     type Morton;
@@ -23,6 +24,7 @@ mod impl_unsigned {
 
     macro_rules! impl_unsigned_morton2 {
         ($morton:ident, $store:ty, $scalar:ident) => {
+            #[doc = concat!("A Morton code for `[", stringify!($scalar), "; 2]`")]
             #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
             #[cfg_attr(
                 feature = "rkyv",
@@ -49,6 +51,7 @@ mod impl_unsigned {
 
     macro_rules! impl_unsigned_morton3 {
         ($morton:ident, $store:ty, $scalar:ident) => {
+            #[doc = concat!("A Morton code for `[", stringify!($scalar), "; 3]`")]
             #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
             #[cfg_attr(
                 feature = "rkyv",
@@ -91,6 +94,7 @@ mod impl_signed {
 
     macro_rules! impl_signed_morton2 {
         ($morton:ident, $store:ident, $scalar:ident, $translate_fn:ident, $untranslate_fn:ident) => {
+            #[doc = concat!("A Morton code for `[", stringify!($scalar), "; 2]`")]
             #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
             #[cfg_attr(
                 feature = "rkyv",
@@ -117,6 +121,7 @@ mod impl_signed {
 
     macro_rules! impl_signed_morton3 {
         ($morton:ident, $store:ident, $scalar:ident, $translate_fn:ident, $untranslate_fn:ident) => {
+            #[doc = concat!("A Morton code for `[", stringify!($scalar), "; 3]`")]
             #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
             #[cfg_attr(
                 feature = "rkyv",

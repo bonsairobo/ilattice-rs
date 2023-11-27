@@ -1,9 +1,12 @@
+//! Traits for implementing generic types.
+
 use core::ops::{Add, Div, Mul, Neg, Rem, Sub};
 use std::{
     fmt::Debug,
     ops::{AddAssign, DivAssign, MulAssign, SubAssign},
 };
 
+/// A scalar value type to be used with [`Vector`].
 pub trait Scalar:
     'static
     + Sized
@@ -25,11 +28,13 @@ pub trait Scalar:
 }
 
 /// Primitive casts, including vectorized casts.
+#[allow(missing_docs)]
 pub trait PrimitiveCast<T> {
     fn cast(self) -> T;
 }
 
 /// A vector over the scalar field `Self::Scalar`.
+#[allow(missing_docs)]
 pub trait Vector:
     'static
     + Sized
@@ -54,6 +59,8 @@ pub trait Vector:
     }
 }
 
+/// A 2-dimensional [`Vector`].
+#[allow(missing_docs)]
 pub trait Vector2: Vector + From<[Self::Scalar; 2]> {
     fn x(self) -> Self::Scalar;
     fn y(self) -> Self::Scalar;
@@ -70,6 +77,8 @@ pub trait Vector2: Vector + From<[Self::Scalar; 2]> {
     }
 }
 
+/// A 3-dimensional [`Vector`].
+#[allow(missing_docs)]
 pub trait Vector3: Vector + From<[Self::Scalar; 3]> {
     fn x(self) -> Self::Scalar;
     fn y(self) -> Self::Scalar;
@@ -88,6 +97,8 @@ pub trait Vector3: Vector + From<[Self::Scalar; 3]> {
     }
 }
 
+/// Arithmetic operations on [`Vector`]s.
+#[allow(missing_docs)]
 pub trait VectorArithmetic<T>:
     Sized
     + Add<T, Output = Self>
@@ -103,52 +114,65 @@ pub trait VectorArithmetic<T>:
 {
 }
 
+/// Creates a vector with all components equal to `value`.
+#[allow(missing_docs)]
 pub trait Splat<T> {
-    /// Creates a vector with all components equal to `value`.
     fn splat(value: T) -> Self;
 }
 
+/// Applies `f` to all components, returning the results as `Self`.
+#[allow(missing_docs)]
 pub trait Map<T> {
-    /// Applies `f` to all components, returning the results as `Self`.
     fn map(self, f: impl Fn(T) -> T) -> Self;
 }
 
+/// Zips the components of `self` and `other`, applying `f`, and returning the
+/// results as `Self`.
+#[allow(missing_docs)]
 pub trait ZipMap<T> {
-    /// Zips the components of `self` and `other`, applying `f`, and returning
-    /// the results as `Self`.
     fn zip_map(self, other: Self, f: impl Fn(T, T) -> T) -> Self;
 }
 
+/// Folds `f` over the vector components onto `init`.
+#[allow(missing_docs)]
 pub trait Fold<T> {
     fn fold<Out>(self, init: Out, f: impl Fn(T, Out) -> Out) -> Out;
 }
 
+/// Returns the least component.
+#[allow(missing_docs)]
 pub trait Min<T> {
-    /// Returns the least component.
     fn min_element(self) -> T;
 }
 
+/// Returns the greatest component.
+#[allow(missing_docs)]
 pub trait Max<T> {
-    /// Returns the greatest component.
     fn max_element(self) -> T;
 }
 
+/// Defines the constant zero scalar/vector.
+#[allow(missing_docs)]
 pub trait Zero {
     const ZERO: Self;
 }
 
+/// Defines the constant one scalar.
+#[allow(missing_docs)]
 pub trait One {
     const ONE: Self;
 }
 
+/// Defines the constant vector of all ones.
+#[allow(missing_docs)]
 pub trait Ones {
-    /// A vector of all ones.
     const ONES: Self;
 }
 
 /// A trait denoting that the `PartialOrd` for `Self::LatticeVector` is
 /// consistent with the [lattice](https://en.wikipedia.org/wiki/Lattice_(order))
 /// structure.
+#[allow(missing_docs)]
 pub trait LatticeOrder {
     type LatticeVector: PartialOrd;
 
@@ -160,9 +184,12 @@ pub trait LatticeOrder {
 
 /// A newtype that can be used to override the `PartialOrd` implementation of
 /// `T` so that it is consistent with `LatticeOrder`.
+#[allow(missing_docs)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WithLatticeOrd<T>(pub T);
 
+/// Defines the constant bounds of a scalar/vector types.
+#[allow(missing_docs)]
 pub trait Bounded {
     const MIN: Self;
     const MAX: Self;
@@ -171,6 +198,7 @@ pub trait Bounded {
 /// Given some scalar, define how it defines the maximum value over a range.
 ///
 /// This works differently for integers and real numbers.
+#[allow(missing_docs)]
 pub trait RangeMax {
     fn range_max(min: Self, length: Self) -> Self;
     fn range_length(min: Self, max: Self) -> Self;
@@ -179,10 +207,14 @@ pub trait RangeMax {
 mod signed_vector {
     use super::{Neg, Vector};
 
+    /// Returns the sign of each vector component.
+    #[allow(missing_docs)]
     pub trait SignedVector: Vector + Abs + Neg {
         fn signum(self) -> Self;
     }
 
+    /// Returns the absolute value of each vector component.
+    #[allow(missing_docs)]
     pub trait Abs {
         fn abs(self) -> Self;
     }
@@ -195,6 +227,8 @@ mod integer_vector {
     use core::ops::{BitAnd, BitOr, BitXor, Not, Shl, Shr};
     use std::convert::TryInto;
 
+    /// A [`Scalar`] with integer-specific behaviors.
+    #[allow(missing_docs)]
     pub trait IntegerScalar:
         Scalar
         + TryInto<u64>
@@ -210,6 +244,7 @@ mod integer_vector {
     /// A `Vector<T>` where `T` is some integer.
     ///
     /// This enables `Eq`, bitwise logical operations, and bit shifting.
+    #[allow(missing_docs)]
     pub trait IntegerVector:
         Vector<Scalar = Self::IntScalar>
         + Eq
@@ -227,11 +262,15 @@ mod integer_vector {
         }
     }
 
+    /// Bitwise operations for [`Scalar`]s.
+    #[allow(missing_docs)]
     pub trait ScalarBitwiseLogic<Rhs>:
         Sized + BitAnd<Rhs, Output = Self> + BitOr<Rhs, Output = Self> + BitXor<Rhs, Output = Self>
     {
     }
 
+    /// Bitwise operations for [`Vector`]s.
+    #[allow(missing_docs)]
     pub trait VectorBitwiseLogic:
         Sized
         + BitAnd<Self, Output = Self>
@@ -241,11 +280,15 @@ mod integer_vector {
     {
     }
 
+    /// Bit shifting operations for [`Scalar`]s and [`Vector`]s.
+    #[allow(missing_docs)]
     pub trait ShiftOps<Rhs>: Sized + Shl<Rhs, Output = Self> + Shr<Rhs, Output = Self> {}
 
-    // Only support shifting by unsigned primitives; signed shifting has
-    // surprising behavior. HOWEVER we do support shifting by `Self` as it makes
-    // generic code much simpler.
+    /// Bit shifting with any unsigned integer or `Self` RHS operand.
+    ///
+    /// Signed shifting has surprising behavior. HOWEVER we do support shifting
+    /// by `Self` as it makes generic code much simpler.
+    #[allow(missing_docs)]
     pub trait AllShiftOps<T>:
         ShiftOps<Self>
         + ShiftOps<T>
@@ -262,6 +305,8 @@ pub use integer_vector::*;
 mod float_vector {
     use super::{PrimitiveCast, Scalar, Vector};
 
+    /// A `Vector<T>` where `T` is some floating point number.
+    #[allow(missing_docs)]
     pub trait FloatVector:
         Vector<Scalar = Self::FloatScalar> + RoundingOps + PrimitiveCast<Self::Int>
     {
@@ -269,6 +314,8 @@ mod float_vector {
         type Int;
     }
 
+    /// Rounding operations for [`FloatVector`]s.
+    #[allow(missing_docs)]
     pub trait RoundingOps {
         fn floor(self) -> Self;
         fn ceil(self) -> Self;

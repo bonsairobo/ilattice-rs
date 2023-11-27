@@ -54,8 +54,10 @@ where
 impl<V> Eq for Aabb<V> where V: Eq {}
 
 impl<V> Aabb<V> {
+    /// Array of all edges, where vertices are defined as `0bYX`.
     pub const EDGES2: [[usize; 2]; 4] = [[0b00, 0b01], [0b00, 0b10], [0b01, 0b11], [0b10, 0b11]];
 
+    /// Array of all edges, where vertices are defined as `0bZYX`.
     pub const EDGES3: [[usize; 2]; 12] = [
         [0b000, 0b001],
         [0b000, 0b010],
@@ -71,6 +73,7 @@ impl<V> Aabb<V> {
         [0b011, 0b111],
     ];
 
+    /// Maps `f` over all components.
     #[inline]
     pub fn map_components<T>(&self, f: impl Fn(&V) -> T) -> Aabb<T> {
         Aabb {
@@ -234,6 +237,7 @@ where
         ]
     }
 
+    /// Splits a 2-dimensional AABB into 4 AABBs.
     #[inline]
     pub fn split2(&self, split: V) -> [Self; 4]
     where
@@ -250,6 +254,7 @@ where
         ]
     }
 
+    /// Splits a 3-dimensional AABB into 8 AABBs.
     #[inline]
     pub fn split3(&self, split: V) -> [Self; 8]
     where
@@ -288,6 +293,8 @@ where
         ]
     }
 
+    /// Splits a 2-dimensional AABB into 4 quandrant AABBs, but keeps only one
+    /// of the quadrants.
     #[inline]
     pub fn split2_single(&self, split: V, quadrant: u8) -> Self
     where
@@ -313,6 +320,8 @@ where
         Self::new(V::from([mx, my]), V::from([lx, ly]))
     }
 
+    /// Splits a 3-dimensional AABB into 8 octant AABBs, but keeps only one of
+    /// the octants.
     #[inline]
     pub fn split3_single(&self, split: V, octant: u8) -> Self
     where
@@ -348,6 +357,7 @@ where
         Self::new(V::from([mx, my, mz]), V::from([lx, ly, lz]))
     }
 
+    /// The surface area of a 3D AABB.
     #[allow(clippy::suspicious_operation_groupings)]
     #[inline]
     pub fn surface_area3(&self) -> V::Scalar
@@ -596,6 +606,7 @@ impl<Vf> Aabb<Vf>
 where
     Vf: FloatVector,
 {
+    /// The center point of the AABB, i.e. `(max + min) / 2`
     #[inline]
     pub fn center(&self) -> Vf {
         let one = Vf::FloatScalar::ONE;

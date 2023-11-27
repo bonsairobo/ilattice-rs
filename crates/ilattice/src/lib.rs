@@ -10,6 +10,7 @@
 //! [`Vec3A`](glam::Vec3A).
 //!
 //! [integer_lattice_wiki]: https://en.wikipedia.org/wiki/Integer_lattice
+#![deny(missing_docs)]
 #![deny(clippy::missing_inline_in_public_items)]
 
 mod aabb;
@@ -23,6 +24,7 @@ pub mod morton;
 #[cfg(feature = "glam")]
 pub use glam;
 
+#[allow(missing_docs)]
 pub mod prelude {
     pub use super::aabb::*;
     pub use super::vector::*;
