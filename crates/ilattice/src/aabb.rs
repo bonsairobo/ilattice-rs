@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug)]
 #[cfg_attr(
     feature = "rkyv",
-    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize),
+    derive(rkyv::Archive, rkyv::CheckBytes, rkyv::Serialize, rkyv::Deserialize),
     archive(as = "Self"),
     archive(bound(archive = "V: rkyv::Archive<Archived=V>"))
 )]

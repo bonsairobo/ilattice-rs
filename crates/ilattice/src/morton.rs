@@ -21,16 +21,13 @@ pub trait EncodeMorton: From<Self::Morton> + Into<Self::Morton> {
 mod impl_unsigned {
     use morton_encoding::{morton_decode, morton_encode};
 
-    #[cfg(feature = "rkyv")]
-    use rkyv::{Archive, Deserialize, Serialize};
-
     macro_rules! impl_unsigned_morton2 {
-        ($morton:ident, $store:ident, $scalar:ident) => {
+        ($morton:ident, $store:ty, $scalar:ident) => {
             #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
             #[cfg_attr(
                 feature = "rkyv",
-                derive(Archive, Deserialize, Serialize),
-                archive_attr(derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord))
+                derive(rkyv::Archive, rkyv::CheckBytes, rkyv::Deserialize, rkyv::Serialize),
+                archive(as = "Self")
             )]
             pub struct $morton(pub $store);
 
@@ -51,12 +48,12 @@ mod impl_unsigned {
     }
 
     macro_rules! impl_unsigned_morton3 {
-        ($morton:ident, $store:ident, $scalar:ident) => {
+        ($morton:ident, $store:ty, $scalar:ident) => {
             #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
             #[cfg_attr(
                 feature = "rkyv",
-                derive(Archive, Deserialize, Serialize),
-                archive_attr(derive(Debug, Eq, Hash, PartialEq, PartialOrd, Ord))
+                derive(rkyv::Archive, rkyv::CheckBytes, rkyv::Deserialize, rkyv::Serialize),
+                archive(as = "Self")
             )]
             pub struct $morton(pub $store);
 

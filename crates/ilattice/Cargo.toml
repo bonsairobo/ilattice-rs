@@ -12,10 +12,12 @@ all-features = true
 
 [features]
 default = ["glam"] # The default vector impls.
+rkyv = ["dep:rkyv", "rkyv/strict", "rkyv/validation"]
 
 [dependencies]
+bytecheck = "0.6"
 glam = { version = "0.24", optional = true }
 morton-encoding = { version = "2.0", optional = true }
 serde = { version = "1.0", optional = true, features = ["derive"] }
 rayon = { version = "1.7", optional = true }
-rkyv = { version = "0.7", optional = true }
+rkyv = { version = "0.7", features = ["strict", "validation"], optional = true }
