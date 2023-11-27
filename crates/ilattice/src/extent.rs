@@ -1,5 +1,4 @@
 use crate::vector::{FloatVector, IntegerVector, One, Vector, Vector2, Vector3};
-
 use core::ops::{Add, Mul, Shl, Shr, Sub};
 
 #[cfg(feature = "rayon")]
@@ -8,8 +7,11 @@ use rayon::prelude::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// An N-dimensional extent. This is mathematically the Cartesian product of a half-closed interval `[a, b)` in each dimension.
-/// You can also just think of it as an axis-aligned box with some shape and a minimum point.
+/// An N-dimensional extent.
+///
+/// This is mathematically the Cartesian product of a half-closed interval `[a,
+/// b)` in each dimension. You can also just think of it as an axis-aligned box
+/// with some shape and a minimum point.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Extent<V> {
@@ -19,7 +21,8 @@ pub struct Extent<V> {
     pub shape: V,
 }
 
-// A few of these traits could be derived. But it seems that derive will not help the compiler infer trait bounds as well.
+// A few of these traits could be derived. But it seems that derive will not
+// help the compiler infer trait bounds as well.
 impl<V> Clone for Extent<V>
 where
     V: Clone,
@@ -81,7 +84,8 @@ impl<V> Extent<V>
 where
     V: Vector,
 {
-    /// An alternative representation of an extent as the minimum point and least upper bound.
+    /// An alternative representation of an extent as the minimum point and
+    /// least upper bound.
     #[inline]
     pub fn from_min_and_lub(minimum: V, least_upper_bound: V) -> Self {
         // We want to avoid negative shape components.
@@ -102,7 +106,8 @@ where
         Self::from_min_and_shape(self.minimum, new_shape)
     }
 
-    /// The least point `p` for which all points `q` in the extent satisfy `q < p`.
+    /// The least point `p` for which all points `q` in the extent satisfy `q
+    /// < p`.
     #[inline]
     pub fn least_upper_bound(&self) -> V {
         self.minimum + self.shape
@@ -132,13 +137,15 @@ where
         )
     }
 
-    /// Returns `Some(self)` iff this extent has a positive shape, otherise `None`.
+    /// Returns `Some(self)` iff this extent has a positive shape, otherise
+    /// `None`.
     #[inline]
     pub fn check_positive_shape(self) -> Option<Self> {
         self.shape.is_positive().then_some(self)
     }
 
-    /// Returns the extent containing only the points in both `self` and `other`.
+    /// Returns the extent containing only the points in both `self` and
+    /// `other`.
     ///
     /// ```
     /// # use ilattice::extent::Extent;
@@ -146,7 +153,10 @@ where
     /// let e1 = Extent::from_min_and_max(IVec2::from([0; 2]), IVec2::from([3; 2]));
     /// let e2 = Extent::from_min_and_max(IVec2::from([2; 2]), IVec2::from([4; 2]));
     ///
-    /// assert_eq!(e1.intersection(&e2), Extent::from_min_and_max(IVec2::from([2; 2]), IVec2::from([3; 2])));
+    /// assert_eq!(
+    ///     e1.intersection(&e2),
+    ///     Extent::from_min_and_max(IVec2::from([2; 2]), IVec2::from([3; 2]))
+    /// );
     /// assert!(!e1.intersection(&e2).is_empty());
     ///
     /// let e1 = Extent::from_min_and_max(IVec2::from([0; 2]), IVec2::from([1; 2]));
@@ -176,7 +186,8 @@ where
         Self::from_min_and_lub(minimum, lub)
     }
 
-    /// Returns `true` iff the intersection of `self` and `other` is equal to `self`.
+    /// Returns `true` iff the intersection of `self` and `other` is equal to
+    /// `self`.
     #[inline]
     pub fn is_subset_of(&self, other: &Self) -> bool {
         self.intersection(other).eq(self)
@@ -357,8 +368,9 @@ impl<V> Extent<V>
 where
     V: IntegerVector,
 {
-    /// An alternative representation of an integer extent as the minimum point and maximum point. This only works for integer
-    /// extents, where there is a unique maximum point.
+    /// An alternative representation of an integer extent as the minimum point
+    /// and maximum point. This only works for integer extents, where there is a
+    /// unique maximum point.
     #[inline]
     pub fn from_min_and_max(minimum: V, max: V) -> Self {
         Self::from_min_and_lub(minimum, max + V::ONES)
@@ -455,7 +467,8 @@ where
     }
 
     #[cfg(feature = "rayon")]
-    /// Returns a rayon parallel iterator over all points in this 2-dimensional extent.
+    /// Returns a rayon parallel iterator over all points in this 2-dimensional
+    /// extent.
     ///
     /// ```
     /// # use ilattice::extent::Extent;
@@ -533,7 +546,9 @@ where
     }
 
     #[cfg(feature = "rayon")]
-    /// Returns a rayon parallel iterator over all points in this 3-dimensional extent.
+    /// Returns a rayon parallel iterator over all points in this 3-dimensional
+    /// extent.
+    ///
     /// ```
     /// # use ilattice::extent::Extent;
     /// # use rayon::prelude::*;
@@ -707,9 +722,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use glam::{Vec2, Vec3};
-
     use super::*;
+    use glam::{Vec2, Vec3};
 
     #[test]
     fn splits_are_consistent() {

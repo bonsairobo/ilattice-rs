@@ -113,7 +113,8 @@ pub trait Map<T> {
 }
 
 pub trait ZipMap<T> {
-    /// Zips the components of `self` and `other`, applying `f`, and returning the results as `Self`.
+    /// Zips the components of `self` and `other`, applying `f`, and returning
+    /// the results as `Self`.
     fn zip_map(self, other: Self, f: impl Fn(T, T) -> T) -> Self;
 }
 
@@ -144,8 +145,9 @@ pub trait Ones {
     const ONES: Self;
 }
 
-/// A trait denoting that the `PartialOrd` for `Self::LatticeVector` is consistent with the
-/// [lattice](https://en.wikipedia.org/wiki/Lattice_(order)) structure.
+/// A trait denoting that the `PartialOrd` for `Self::LatticeVector` is
+/// consistent with the [lattice](https://en.wikipedia.org/wiki/Lattice_(order))
+/// structure.
 pub trait LatticeOrder {
     type LatticeVector: PartialOrd;
 
@@ -155,7 +157,8 @@ pub trait LatticeOrder {
     fn greatest_lower_bound(self, other: Self) -> Self;
 }
 
-/// A newtype that can be used to override the `PartialOrd` implementation of `T` so that it is consistent with `LatticeOrder`.
+/// A newtype that can be used to override the `PartialOrd` implementation of
+/// `T` so that it is consistent with `LatticeOrder`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct WithLatticeOrd<T>(pub T);
 
@@ -231,8 +234,9 @@ mod integer_vector {
 
     pub trait ShiftOps<Rhs>: Sized + Shl<Rhs, Output = Self> + Shr<Rhs, Output = Self> {}
 
-    // Only support shifting by unsigned primitives; signed shifting has surprising behavior.
-    // HOWEVER we do support shifting by `Self` as it makes generic code much simpler.
+    // Only support shifting by unsigned primitives; signed shifting has
+    // surprising behavior. HOWEVER we do support shifting by `Self` as it makes
+    // generic code much simpler.
     pub trait AllShiftOps<T>:
         ShiftOps<Self>
         + ShiftOps<T>
