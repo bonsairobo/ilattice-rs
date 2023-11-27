@@ -151,7 +151,7 @@ where
     /// `other`.
     ///
     /// ```
-    /// # use ilattice::aabb::Aabb;
+    /// # use ilattice::Aabb;
     /// # use glam::IVec2;
     /// let e1 = Aabb::from_min_and_max(IVec2::from([0; 2]), IVec2::from([3; 2]));
     /// let e2 = Aabb::from_min_and_max(IVec2::from([2; 2]), IVec2::from([4; 2]));
@@ -390,7 +390,7 @@ where
     /// Clamps `v` to force in **inside** of the `self` AABB.
     ///
     /// ```
-    /// # use ilattice::aabb::Aabb;
+    /// # use ilattice::Aabb;
     /// # use glam::IVec2;
     /// let e = Aabb::from_min_and_max(IVec2::new(-1, 5), IVec2::new(2, 10));
     /// let p_in = IVec2::new(0, 8);
@@ -407,7 +407,7 @@ where
     /// Returns an iterator over all points in this 2-dimensional AABB.
     ///
     /// ```
-    /// # use ilattice::aabb::Aabb;
+    /// # use ilattice::Aabb;
     /// # use glam::UVec2;
     /// let e = Aabb::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
     ///
@@ -440,7 +440,7 @@ where
     /// AABB.
     ///
     /// ```
-    /// # use ilattice::aabb::Aabb;
+    /// # use ilattice::Aabb;
     /// # use rayon::prelude::*;
     /// # use glam::UVec2;
     /// let e = Aabb::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
@@ -478,7 +478,7 @@ where
 
     /// Returns an iterator over all points in this 3-dimensional AABB.
     /// ```
-    /// # use ilattice::aabb::Aabb;
+    /// # use ilattice::Aabb;
     /// # use glam::UVec3;
     /// let e = Aabb::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
     ///
@@ -521,7 +521,7 @@ where
     /// AABB.
     ///
     /// ```
-    /// # use ilattice::aabb::Aabb;
+    /// # use ilattice::Aabb;
     /// # use rayon::prelude::*;
     /// # use glam::UVec3;
     /// let e = Aabb::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));

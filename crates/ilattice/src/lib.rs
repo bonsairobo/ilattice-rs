@@ -12,8 +12,10 @@
 //! [integer_lattice_wiki]: https://en.wikipedia.org/wiki/Integer_lattice
 #![deny(clippy::missing_inline_in_public_items)]
 
-pub mod aabb;
+mod aabb;
 pub mod vector;
+
+pub use aabb::Aabb;
 
 #[cfg(feature = "morton-encoding")]
 pub mod morton;
