@@ -84,7 +84,6 @@ where
     /// An alternative representation of an extent as the minimum point and least upper bound.
     #[inline]
     pub fn from_min_and_lub(minimum: V, least_upper_bound: V) -> Self {
-        let minimum = minimum;
         // We want to avoid negative shape components.
         let shape = (least_upper_bound - minimum).least_upper_bound(V::ZERO);
 
