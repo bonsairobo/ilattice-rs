@@ -1,4 +1,4 @@
-use crate::vector::{FloatVector, IntegerVector, One, Vector, Vector2, Vector3};
+use crate::vector::{FloatVector, IntegerVector, One, RangeMax, Vector, Vector2, Vector3};
 use core::ops::{Add, Mul, Shl, Shr, Sub};
 
 #[cfg(feature = "rayon")]
@@ -9,16 +9,16 @@ use serde::{Deserialize, Serialize};
 
 /// An N-dimensional extent.
 ///
-/// This is mathematically the Cartesian product of a half-closed interval `[a,
-/// b)` in each dimension. You can also just think of it as an axis-aligned box
-/// with some shape and a minimum point.
+/// This is mathematically the Cartesian product of a closed interval `[a, b]`
+/// in each dimension. You can also just think of it as an axis-aligned box with
+/// some minimum and maximum point.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Extent<V> {
-    /// The least point contained in the extent.
-    pub minimum: V,
-    /// The length of each dimension.
-    pub shape: V,
+    /// The minimum point contained in the extent.
+    pub min: V,
+    /// The maximum point contained in the extent.
+    pub max: V,
 }
 
 // A few of these traits could be derived. But it seems that derive will not
@@ -30,8 +30,8 @@ where
     #[inline]
     fn clone(&self) -> Self {
         Self {
-            minimum: self.minimum.clone(),
-            shape: self.shape.clone(),
+            min: self.min.clone(),
+            max: self.max.clone(),
         }
     }
 }
@@ -42,7 +42,7 @@ where
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        self.minimum.eq(&other.minimum) && self.shape.eq(&other.shape)
+        self.min.eq(&other.min) && self.max.eq(&other.max)
     }
 }
 impl<V> Eq for Extent<V> where V: Eq {}
@@ -65,17 +65,11 @@ impl<V> Extent<V> {
         [0b011, 0b111],
     ];
 
-    /// The default representation of an extent as the minimum point and shape.
-    #[inline]
-    pub const fn from_min_and_shape(minimum: V, shape: V) -> Self {
-        Self { minimum, shape }
-    }
-
     #[inline]
     pub fn map_components<T>(&self, f: impl Fn(&V) -> T) -> Extent<T> {
         Extent {
-            minimum: f(&self.minimum),
-            shape: f(&self.shape),
+            min: f(&self.min),
+            max: f(&self.max),
         }
     }
 }
@@ -84,56 +78,79 @@ impl<V> Extent<V>
 where
     V: Vector,
 {
+    /// The default representation of an extent as the minimum and maximum points.
+    #[inline]
+    pub const fn from_min_and_max(min: V, max: V) -> Self {
+        Self { min, max }
+    }
+
+    /// An alternative representation of an extent as the minimum point and shape.
+    #[inline]
+    pub fn from_min_and_shape(min: V, shape: V) -> Self {
+        let max = min.zip_map(shape, V::Scalar::range_max);
+        Self::from_min_and_max(min, max)
+    }
+
     /// An alternative representation of an extent as the minimum point and
     /// least upper bound.
     #[inline]
-    pub fn from_min_and_lub(minimum: V, least_upper_bound: V) -> Self {
-        // We want to avoid negative shape components.
-        let shape = (least_upper_bound - minimum).least_upper_bound(V::ZERO);
-
-        Self { minimum, shape }
+    pub fn from_min_and_lub(min: V, lub: V) -> Self {
+        Self::from_min_and_shape(min, (lub - min).least_upper_bound(V::ZERO))
     }
 
     /// Translate the extent such that it has `new_min` as it's new minimum.
     #[inline]
-    pub const fn with_minimum(&self, new_min: V) -> Self {
-        Self::from_min_and_shape(new_min, self.shape)
+    pub fn translate_to_min(&self, new_min: V) -> Self {
+        Self::from_min_and_shape(new_min, self.shape())
     }
 
     /// Resize the extent such that it has `new_shape` as it's new shape.
     #[inline]
-    pub const fn with_shape(&self, new_shape: V) -> Self {
-        Self::from_min_and_shape(self.minimum, new_shape)
+    pub fn with_shape(&self, new_shape: V) -> Self {
+        Self::from_min_and_shape(self.min, new_shape)
     }
 
-    /// The least point `p` for which all points `q` in the extent satisfy `q
-    /// < p`.
+    /// The length of each dimension of the extent.
+    ///
+    /// For real numbers, this is just `max - min`. For integers, we define the
+    /// 1-dimensional length as the number of points in the range `[min, max]`,
+    /// which is calculated as `1 + max - min`.
+    #[inline]
+    pub fn shape(&self) -> V {
+        self.min.zip_map(self.max, V::Scalar::range_length)
+    }
+
+    /// The least element that is an upper bound on all points in the extent.
+    ///
+    /// For real numbers, this is `max`, but for integers, it is the *strict*
+    /// upper bound `max + 1`.
     #[inline]
     pub fn least_upper_bound(&self) -> V {
-        self.minimum + self.shape
+        self.max.map(V::Scalar::range_lub)
     }
 
-    /// The number of points in the extent.
+    /// The volume of the extent.
+    ///
+    /// For real numbers, `(max - min)^D`, and for integers, the number of
+    /// points in the extent.
     #[inline]
     pub fn volume(&self) -> V::Scalar {
-        self.shape.fold(V::Scalar::ONE, |c, out| c * out)
+        self.shape().fold(V::Scalar::ONE, |c, out| c * out)
     }
 
     /// Returns `true` iff the point `p` is contained in this extent.
     #[inline]
     pub fn contains(&self, p: V) -> bool {
-        let lub = self.least_upper_bound();
-
-        self.minimum.with_lattice_ord() <= p.with_lattice_ord()
-            && p.with_lattice_ord() < lub.with_lattice_ord()
+        self.min.with_lattice_ord() <= p.with_lattice_ord()
+            && p.with_lattice_ord() < self.least_upper_bound().with_lattice_ord()
     }
 
     /// Returns a new extent that's been padded on all borders by `pad_amount`.
     #[inline]
     pub fn padded(&self, pad_amount: V::Scalar) -> Self {
-        Self::from_min_and_shape(
-            self.minimum - V::splat(pad_amount),
-            self.shape + V::splat(pad_amount + pad_amount),
+        Self::from_min_and_max(
+            self.min - V::splat(pad_amount),
+            self.max + V::splat(pad_amount),
         )
     }
 
@@ -141,7 +158,7 @@ where
     /// `None`.
     #[inline]
     pub fn check_positive_shape(self) -> Option<Self> {
-        self.shape.is_positive().then_some(self)
+        self.shape().is_positive().then_some(self)
     }
 
     /// Returns the extent containing only the points in both `self` and
@@ -162,12 +179,12 @@ where
     /// let e1 = Extent::from_min_and_max(IVec2::from([0; 2]), IVec2::from([1; 2]));
     /// let e2 = Extent::from_min_and_max(IVec2::from([3; 2]), IVec2::from([4; 2]));
     ///
-    /// assert_eq!(e1.intersection(&e2).shape, IVec2::from([0; 2]));
+    /// assert_eq!(e1.intersection(&e2).shape(), IVec2::from([0; 2]));
     /// assert!(e1.intersection(&e2).is_empty());
     /// ```
     #[inline]
     pub fn intersection(&self, other: &Self) -> Self {
-        let minimum = self.minimum.least_upper_bound(other.minimum);
+        let minimum = self.min.least_upper_bound(other.min);
         let lub = self
             .least_upper_bound()
             .greatest_lower_bound(other.least_upper_bound());
@@ -178,12 +195,12 @@ where
     /// Returns the smallest extent containing all points in `self` or `other`.
     #[inline]
     pub fn bound_union(&self, other: &Self) -> Self {
-        let minimum = self.minimum.greatest_lower_bound(other.minimum);
+        let min = self.min.greatest_lower_bound(other.min);
         let lub = self
             .least_upper_bound()
             .least_upper_bound(other.least_upper_bound());
 
-        Self::from_min_and_lub(minimum, lub)
+        Self::from_min_and_lub(min, lub)
     }
 
     /// Returns `true` iff the intersection of `self` and `other` is equal to
@@ -199,7 +216,7 @@ where
     where
         V: Vector2,
     {
-        let min = self.minimum;
+        let min = self.min;
         let lub = self.least_upper_bound();
 
         [
@@ -216,7 +233,7 @@ where
     where
         V: Vector3,
     {
-        let min = self.minimum;
+        let min = self.min;
         let lub = self.least_upper_bound();
 
         [
@@ -236,7 +253,7 @@ where
     where
         V: Vector2,
     {
-        let min = self.minimum;
+        let min = self.min;
         let lub = self.least_upper_bound();
 
         [
@@ -252,7 +269,7 @@ where
     where
         V: Vector3,
     {
-        let min = self.minimum;
+        let min = self.min;
         let lub = self.least_upper_bound();
 
         [
@@ -290,7 +307,7 @@ where
     where
         V: Vector2,
     {
-        let min = self.minimum;
+        let min = self.min;
         let lub = self.least_upper_bound();
         let all_coords = [min.x(), min.y(), split.x(), split.y(), lub.x(), lub.y()];
 
@@ -315,7 +332,7 @@ where
     where
         V: Vector3,
     {
-        let min = self.minimum;
+        let min = self.min;
         let lub = self.least_upper_bound();
         let all_coords = [
             min.x(),
@@ -351,15 +368,13 @@ where
     where
         V: Vector3,
     {
-        (V::Scalar::ONE + V::Scalar::ONE)
-            * (self.shape.x() * self.shape.y()
-                + self.shape.y() * self.shape.z()
-                + self.shape.z() * self.shape.x())
+        let s = self.shape();
+        (V::Scalar::ONE + V::Scalar::ONE) * (s.x() * s.y() + s.y() * s.z() + s.z() * s.x())
     }
 
     #[inline]
     pub fn clamp_min_lub(&self, v: V) -> V {
-        v.least_upper_bound(self.minimum)
+        v.least_upper_bound(self.min)
             .greatest_lower_bound(self.least_upper_bound())
     }
 }
@@ -368,14 +383,6 @@ impl<V> Extent<V>
 where
     V: IntegerVector,
 {
-    /// An alternative representation of an integer extent as the minimum point
-    /// and maximum point. This only works for integer extents, where there is a
-    /// unique maximum point.
-    #[inline]
-    pub fn from_min_and_max(minimum: V, max: V) -> Self {
-        Self::from_min_and_lub(minimum, max + V::ONES)
-    }
-
     /// Constructs the unique extent with both `p1` and `p2` as corners.
     #[inline]
     pub fn from_corners(p1: V, p2: V) -> Self {
@@ -407,14 +414,6 @@ where
         self.num_points() == 0
     }
 
-    /// The unique greatest point in the extent.
-    #[inline]
-    pub fn max(&self) -> V {
-        let lub = self.least_upper_bound();
-
-        lub - V::ONES
-    }
-
     /// Clamps `v` to force in **inside** of the `self` extent.
     ///
     /// ```
@@ -429,8 +428,7 @@ where
     /// ```
     #[inline]
     pub fn clamp_min_max(&self, v: V) -> V {
-        v.least_upper_bound(self.minimum)
-            .greatest_lower_bound(self.max())
+        v.least_upper_bound(self.min).greatest_lower_bound(self.max)
     }
 
     /// Returns an iterator over all points in this 2-dimensional extent.
@@ -458,10 +456,10 @@ where
         V: Vector2,
         std::ops::Range<V::IntScalar>: Iterator<Item = V::IntScalar>,
     {
-        let min = self.minimum;
+        // For some reason, using self.max requires satisfying more trait bounds.
         let lub = self.least_upper_bound();
-        let y_range = min.y()..lub.y();
-        let x_range = min.x()..lub.x();
+        let y_range = self.min.y()..lub.y();
+        let x_range = self.min.x()..lub.x();
 
         y_range.flat_map(move |y| x_range.clone().map(move |x| V::from([x, y])))
     }
@@ -495,10 +493,10 @@ where
         V::Scalar: Send + Sync,
         std::ops::Range<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
     {
-        let min_x = self.minimum.x();
+        let min_x = self.min.x();
         let lub_x = self.least_upper_bound().x();
 
-        (self.minimum.y()..self.least_upper_bound().y())
+        (self.min.y()..self.least_upper_bound().y())
             .into_par_iter()
             .flat_map(move |y| (min_x..lub_x).into_par_iter().map(move |x| V::from([x, y])))
     }
@@ -531,7 +529,7 @@ where
         V: Vector3,
         std::ops::Range<V::IntScalar>: Iterator<Item = V::IntScalar>,
     {
-        let min = self.minimum;
+        let min = self.min;
         let lub = self.least_upper_bound();
         let z_range = min.z()..lub.z();
         let y_range = min.y()..lub.y();
@@ -579,20 +577,18 @@ where
         std::ops::Range<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
     {
         let lub = self.least_upper_bound();
-        let min_y = self.minimum.y();
+        let min_y = self.min.y();
         let lub_y = lub.y();
-        let min_x = self.minimum.x();
+        let min_x = self.min.x();
         let lub_x = lub.x();
 
-        (self.minimum.z()..lub.z())
-            .into_par_iter()
-            .flat_map(move |z| {
-                (min_y..lub_y).into_par_iter().flat_map(move |y| {
-                    (min_x..lub_x)
-                        .into_par_iter()
-                        .map(move |x| V::from([x, y, z]))
-                })
+        (self.min.z()..lub.z()).into_par_iter().flat_map(move |z| {
+            (min_y..lub_y).into_par_iter().flat_map(move |y| {
+                (min_x..lub_x)
+                    .into_par_iter()
+                    .map(move |x| V::from([x, y, z]))
             })
+        })
     }
 
     /// Returns the smallest extent containing all of the given points.
@@ -623,7 +619,7 @@ where
     #[inline]
     pub fn center(&self) -> Vf {
         let one = Vf::FloatScalar::ONE;
-        self.minimum + self.shape / (one + one)
+        (self.min + self.max) / (one + one)
     }
 }
 
@@ -636,38 +632,40 @@ where
     #[inline]
     pub fn containing_integer_extent(&self) -> Extent<Vi> {
         Extent::from_min_and_max(
-            self.minimum.floor().cast(),
+            self.min.floor().cast(),
             self.least_upper_bound().floor().cast(),
         )
     }
 }
 
-impl<V> Add<V> for Extent<V>
+impl<V, Rhs> Add<Rhs> for Extent<V>
 where
-    V: Add<Output = V>,
+    V: Add<Rhs, Output = V>,
+    Rhs: Copy,
 {
     type Output = Self;
 
     #[inline]
-    fn add(self, rhs: V) -> Self::Output {
+    fn add(self, rhs: Rhs) -> Self::Output {
         Self {
-            minimum: self.minimum + rhs,
-            shape: self.shape,
+            min: self.min + rhs,
+            max: self.max + rhs,
         }
     }
 }
 
-impl<V> Sub<V> for Extent<V>
+impl<V, Rhs> Sub<Rhs> for Extent<V>
 where
-    V: Sub<Output = V>,
+    V: Sub<Rhs, Output = V>,
+    Rhs: Copy,
 {
     type Output = Self;
 
     #[inline]
-    fn sub(self, rhs: V) -> Self::Output {
+    fn sub(self, rhs: Rhs) -> Self::Output {
         Self {
-            minimum: self.minimum - rhs,
-            shape: self.shape,
+            min: self.min - rhs,
+            max: self.max - rhs,
         }
     }
 }
@@ -682,8 +680,8 @@ where
     #[inline]
     fn mul(self, rhs: Rhs) -> Self::Output {
         Self {
-            minimum: self.minimum * rhs,
-            shape: self.shape * rhs,
+            min: self.min * rhs,
+            max: self.max * rhs,
         }
     }
 }
@@ -698,8 +696,8 @@ where
     #[inline]
     fn shl(self, rhs: Rhs) -> Self::Output {
         Self {
-            minimum: self.minimum << rhs,
-            shape: self.shape << rhs,
+            min: self.min << rhs,
+            max: self.max << rhs,
         }
     }
 }
@@ -714,8 +712,8 @@ where
     #[inline]
     fn shr(self, rhs: Rhs) -> Self::Output {
         Self {
-            minimum: self.minimum >> rhs,
-            shape: self.shape >> rhs,
+            min: self.min >> rhs,
+            max: self.max >> rhs,
         }
     }
 }

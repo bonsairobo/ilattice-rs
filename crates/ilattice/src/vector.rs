@@ -20,6 +20,7 @@ pub trait Scalar:
     + Div<Output = Self>
     + DivAssign
     + PartialOrd
+    + RangeMax
 {
 }
 
@@ -167,6 +168,15 @@ pub trait Bounded {
     const MAX: Self;
 }
 
+/// Given some scalar, define how it defines the maximum value over a range.
+///
+/// This works differently for integers and real numbers.
+pub trait RangeMax {
+    fn range_max(min: Self, length: Self) -> Self;
+    fn range_length(min: Self, max: Self) -> Self;
+    fn range_lub(max: Self) -> Self;
+}
+
 mod signed_vector {
     use super::{Neg, Vector};
 
@@ -268,7 +278,7 @@ mod float_vector {
 pub use float_vector::*;
 
 mod scalar_impl {
-    use super::{Bounded, IntegerScalar, One, PrimitiveCast, Scalar, Zero};
+    use super::{Bounded, IntegerScalar, One, PrimitiveCast, RangeMax, Scalar, Zero};
 
     macro_rules! impl_integer_scalar {
         ($t:ident) => {
@@ -316,6 +326,21 @@ mod scalar_impl {
             impl One for $t {
                 const ONE: $t = 1;
             }
+
+            impl RangeMax for $t {
+                #[inline]
+                fn range_max(min: Self, length: Self) -> Self {
+                    min + length - 1
+                }
+                #[inline]
+                fn range_length(min: Self, max: Self) -> Self {
+                    1 + max - min
+                }
+                #[inline]
+                fn range_lub(max: Self) -> Self {
+                    max + 1
+                }
+            }
         };
     }
 
@@ -328,6 +353,20 @@ mod scalar_impl {
             }
             impl One for $t {
                 const ONE: $t = 1.0;
+            }
+            impl RangeMax for $t {
+                #[inline]
+                fn range_max(min: Self, length: Self) -> Self {
+                    min + length
+                }
+                #[inline]
+                fn range_length(min: Self, max: Self) -> Self {
+                    max - min
+                }
+                #[inline]
+                fn range_lub(max: Self) -> Self {
+                    max
+                }
             }
         };
     }
