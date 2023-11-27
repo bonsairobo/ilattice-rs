@@ -3,3 +3,4 @@ members = [
     'crates/grid-ray',
     'crates/ilattice',
 ]
+resolver = "2"
