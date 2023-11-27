@@ -86,7 +86,7 @@ where
 {
     /// The default representation of an AABB as the minimum and maximum points.
     #[inline]
-    pub const fn from_min_and_max(min: V, max: V) -> Self {
+    pub const fn new(min: V, max: V) -> Self {
         Self { min, max }
     }
 
@@ -94,7 +94,7 @@ where
     #[inline]
     pub fn from_min_and_shape(min: V, shape: V) -> Self {
         let max = min.zip_map(shape, V::Scalar::range_max);
-        Self::from_min_and_max(min, max)
+        Self::new(min, max)
     }
 
     /// Translate the AABB such that it has `new_min` as it's new minimum.
@@ -140,7 +140,7 @@ where
     /// Returns a new AABB that's been padded on all borders by `pad_amount`.
     #[inline]
     pub fn padded(&self, pad_amount: V::Scalar) -> Self {
-        Self::from_min_and_max(
+        Self::new(
             self.min - V::splat(pad_amount),
             self.max + V::splat(pad_amount),
         )
@@ -159,17 +159,17 @@ where
     /// ```
     /// # use ilattice::Aabb;
     /// # use glam::IVec2;
-    /// let e1 = Aabb::from_min_and_max(IVec2::from([0; 2]), IVec2::from([3; 2]));
-    /// let e2 = Aabb::from_min_and_max(IVec2::from([2; 2]), IVec2::from([4; 2]));
+    /// let e1 = Aabb::new(IVec2::from([0; 2]), IVec2::from([3; 2]));
+    /// let e2 = Aabb::new(IVec2::from([2; 2]), IVec2::from([4; 2]));
     ///
     /// assert_eq!(
     ///     e1.intersection(&e2),
-    ///     Aabb::from_min_and_max(IVec2::from([2; 2]), IVec2::from([3; 2]))
+    ///     Aabb::new(IVec2::from([2; 2]), IVec2::from([3; 2]))
     /// );
     /// assert!(!e1.intersection(&e2).is_empty());
     ///
-    /// let e1 = Aabb::from_min_and_max(IVec2::from([0; 2]), IVec2::from([1; 2]));
-    /// let e2 = Aabb::from_min_and_max(IVec2::from([3; 2]), IVec2::from([4; 2]));
+    /// let e1 = Aabb::new(IVec2::from([0; 2]), IVec2::from([1; 2]));
+    /// let e2 = Aabb::new(IVec2::from([3; 2]), IVec2::from([4; 2]));
     ///
     /// assert_eq!(e1.intersection(&e2).shape(), IVec2::from([0; 2]));
     /// assert!(e1.intersection(&e2).is_empty());
@@ -178,7 +178,7 @@ where
     pub fn intersection(&self, other: &Self) -> Self {
         let min = self.min.max(other.min);
         let max = self.max.min(other.max);
-        Self::from_min_and_max(min, max)
+        Self::new(min, max)
     }
 
     /// Returns the smallest AABB containing all points in `self` or `other`.
@@ -186,7 +186,7 @@ where
     pub fn bound_union(&self, other: &Self) -> Self {
         let min = self.min.min(other.min);
         let max = self.max.max(other.max);
-        Self::from_min_and_max(min, max)
+        Self::new(min, max)
     }
 
     /// Returns `true` iff the intersection of `self` and `other` is equal to
@@ -243,10 +243,10 @@ where
         let max = self.max;
 
         [
-            Self::from_min_and_max(min, split),
-            Self::from_min_and_max(V::from([split.x(), min.y()]), V::from([max.x(), split.y()])),
-            Self::from_min_and_max(V::from([min.x(), split.y()]), V::from([split.x(), max.y()])),
-            Self::from_min_and_max(split, max),
+            Self::new(min, split),
+            Self::new(V::from([split.x(), min.y()]), V::from([max.x(), split.y()])),
+            Self::new(V::from([min.x(), split.y()]), V::from([split.x(), max.y()])),
+            Self::new(split, max),
         ]
     }
 
@@ -259,32 +259,32 @@ where
         let max = self.max;
 
         [
-            Self::from_min_and_max(min, split),
-            Self::from_min_and_max(
+            Self::new(min, split),
+            Self::new(
                 V::from([split.x(), min.y(), min.z()]),
                 V::from([max.x(), split.y(), split.z()]),
             ),
-            Self::from_min_and_max(
+            Self::new(
                 V::from([min.x(), split.y(), min.z()]),
                 V::from([split.x(), max.y(), split.z()]),
             ),
-            Self::from_min_and_max(
+            Self::new(
                 V::from([split.x(), split.y(), min.z()]),
                 V::from([max.x(), max.y(), split.z()]),
             ),
-            Self::from_min_and_max(
+            Self::new(
                 V::from([min.x(), min.y(), split.z()]),
                 V::from([split.x(), split.y(), max.z()]),
             ),
-            Self::from_min_and_max(
+            Self::new(
                 V::from([split.x(), min.y(), split.z()]),
                 V::from([max.x(), split.y(), max.z()]),
             ),
-            Self::from_min_and_max(
+            Self::new(
                 V::from([min.x(), split.y(), split.z()]),
                 V::from([split.x(), max.y(), max.z()]),
             ),
-            Self::from_min_and_max(split, max),
+            Self::new(split, max),
         ]
     }
 
@@ -310,7 +310,7 @@ where
         ];
         let [mx, my, lx, ly] = LUT[quadrant as usize].map(|i| all_coords[i]);
 
-        Self::from_min_and_max(V::from([mx, my]), V::from([lx, ly]))
+        Self::new(V::from([mx, my]), V::from([lx, ly]))
     }
 
     #[inline]
@@ -345,7 +345,7 @@ where
         ];
         let [mx, my, mz, lx, ly, lz] = LUT[octant as usize].map(|i| all_coords[i]);
 
-        Self::from_min_and_max(V::from([mx, my, mz]), V::from([lx, ly, lz]))
+        Self::new(V::from([mx, my, mz]), V::from([lx, ly, lz]))
     }
 
     #[allow(clippy::suspicious_operation_groupings)]
@@ -368,7 +368,7 @@ where
     pub fn from_corners(p1: V, p2: V) -> Self {
         let min = p1.min(p2);
         let max = p1.max(p2);
-        Self::from_min_and_max(min, max)
+        Self::new(min, max)
     }
 
     /// The number of points contained in the AABB.
@@ -398,7 +398,7 @@ where
     /// ```
     /// # use ilattice::Aabb;
     /// # use glam::IVec2;
-    /// let e = Aabb::from_min_and_max(IVec2::new(-1, 5), IVec2::new(2, 10));
+    /// let e = Aabb::new(IVec2::new(-1, 5), IVec2::new(2, 10));
     /// let p_in = IVec2::new(0, 8);
     /// let p_out = IVec2::new(-4, 20);
     ///
@@ -588,7 +588,7 @@ where
             max_point = max_point.max(v);
         }
 
-        Self::from_min_and_max(min_point, max_point)
+        Self::new(min_point, max_point)
     }
 }
 
@@ -611,7 +611,7 @@ where
     /// Returns the integer `Aabb` that contains `self`.
     #[inline]
     pub fn containing_integer_aabb(&self) -> Aabb<Vi> {
-        Aabb::from_min_and_max(self.min.floor().cast(), self.max.floor().cast())
+        Aabb::new(self.min.floor().cast(), self.max.floor().cast())
     }
 }
 
@@ -702,7 +702,7 @@ mod tests {
 
     #[test]
     fn splits_are_consistent() {
-        let e = Aabb::from_min_and_max(Vec2::new(0.0, 1.0), Vec2::new(3.0, 4.0));
+        let e = Aabb::new(Vec2::new(0.0, 1.0), Vec2::new(3.0, 4.0));
         let split_at = Vec2::new(2.0, 3.0);
 
         assert_eq!(
@@ -710,7 +710,7 @@ mod tests {
             [0, 1, 2, 3].map(|quadrant| e.split2_single(split_at, quadrant))
         );
 
-        let e = Aabb::from_min_and_max(Vec3::new(0.0, 1.0, 2.0), Vec3::new(6.0, 7.0, 8.0));
+        let e = Aabb::new(Vec3::new(0.0, 1.0, 2.0), Vec3::new(6.0, 7.0, 8.0));
         let split_at = Vec3::new(3.0, 4.0, 5.0);
 
         assert_eq!(
