@@ -7,23 +7,23 @@ use rayon::prelude::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// An N-dimensional extent.
+/// An N-dimensional AABB.
 ///
 /// This is mathematically the Cartesian product of a closed interval `[a, b]`
 /// in each dimension. You can also just think of it as an axis-aligned box with
 /// some minimum and maximum point.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Extent<V> {
-    /// The minimum point contained in the extent.
+pub struct Aabb<V> {
+    /// The minimum point contained in the AABB.
     pub min: V,
-    /// The maximum point contained in the extent.
+    /// The maximum point contained in the AABB.
     pub max: V,
 }
 
 // A few of these traits could be derived. But it seems that derive will not
 // help the compiler infer trait bounds as well.
-impl<V> Clone for Extent<V>
+impl<V> Clone for Aabb<V>
 where
     V: Clone,
 {
@@ -35,8 +35,8 @@ where
         }
     }
 }
-impl<V> Copy for Extent<V> where V: Copy {}
-impl<V> PartialEq for Extent<V>
+impl<V> Copy for Aabb<V> where V: Copy {}
+impl<V> PartialEq for Aabb<V>
 where
     V: PartialEq,
 {
@@ -45,9 +45,9 @@ where
         self.min.eq(&other.min) && self.max.eq(&other.max)
     }
 }
-impl<V> Eq for Extent<V> where V: Eq {}
+impl<V> Eq for Aabb<V> where V: Eq {}
 
-impl<V> Extent<V> {
+impl<V> Aabb<V> {
     pub const EDGES2: [[usize; 2]; 4] = [[0b00, 0b01], [0b00, 0b10], [0b01, 0b11], [0b10, 0b11]];
 
     pub const EDGES3: [[usize; 2]; 12] = [
@@ -66,44 +66,44 @@ impl<V> Extent<V> {
     ];
 
     #[inline]
-    pub fn map_components<T>(&self, f: impl Fn(&V) -> T) -> Extent<T> {
-        Extent {
+    pub fn map_components<T>(&self, f: impl Fn(&V) -> T) -> Aabb<T> {
+        Aabb {
             min: f(&self.min),
             max: f(&self.max),
         }
     }
 }
 
-impl<V> Extent<V>
+impl<V> Aabb<V>
 where
     V: Vector,
 {
-    /// The default representation of an extent as the minimum and maximum points.
+    /// The default representation of an AABB as the minimum and maximum points.
     #[inline]
     pub const fn from_min_and_max(min: V, max: V) -> Self {
         Self { min, max }
     }
 
-    /// An alternative representation of an extent as the minimum point and shape.
+    /// An alternative representation of an AABB as the minimum point and shape.
     #[inline]
     pub fn from_min_and_shape(min: V, shape: V) -> Self {
         let max = min.zip_map(shape, V::Scalar::range_max);
         Self::from_min_and_max(min, max)
     }
 
-    /// Translate the extent such that it has `new_min` as it's new minimum.
+    /// Translate the AABB such that it has `new_min` as it's new minimum.
     #[inline]
     pub fn translate_to_min(&self, new_min: V) -> Self {
         Self::from_min_and_shape(new_min, self.shape())
     }
 
-    /// Resize the extent such that it has `new_shape` as it's new shape.
+    /// Resize the AABB such that it has `new_shape` as it's new shape.
     #[inline]
     pub fn with_shape(&self, new_shape: V) -> Self {
         Self::from_min_and_shape(self.min, new_shape)
     }
 
-    /// The length of each dimension of the extent.
+    /// The length of each dimension of the AABB.
     ///
     /// For real numbers, this is just `max - min`. For integers, we define the
     /// 1-dimensional length as the number of points in the range `[min, max]`,
@@ -115,23 +115,23 @@ where
             .max(V::ZERO)
     }
 
-    /// The volume of the extent.
+    /// The volume of the AABB.
     ///
     /// For real numbers, `(max - min)^D`, and for integers, the number of
-    /// points in the extent.
+    /// points in the AABB.
     #[inline]
     pub fn volume(&self) -> V::Scalar {
         self.shape().fold(V::Scalar::ONE, |c, out| c * out)
     }
 
-    /// Returns `true` iff the point `p` is contained in this extent.
+    /// Returns `true` iff the point `p` is contained in this AABB.
     #[inline]
     pub fn contains(&self, p: V) -> bool {
         self.min.with_lattice_ord() <= p.with_lattice_ord()
             && p.with_lattice_ord() <= self.max.with_lattice_ord()
     }
 
-    /// Returns a new extent that's been padded on all borders by `pad_amount`.
+    /// Returns a new AABB that's been padded on all borders by `pad_amount`.
     #[inline]
     pub fn padded(&self, pad_amount: V::Scalar) -> Self {
         Self::from_min_and_max(
@@ -140,30 +140,30 @@ where
         )
     }
 
-    /// Returns `Some(self)` iff this extent has a positive shape, otherise
+    /// Returns `Some(self)` iff this AABB has a positive shape, otherise
     /// `None`.
     #[inline]
     pub fn check_positive_shape(self) -> Option<Self> {
         self.shape().is_positive().then_some(self)
     }
 
-    /// Returns the extent containing only the points in both `self` and
+    /// Returns the AABB containing only the points in both `self` and
     /// `other`.
     ///
     /// ```
-    /// # use ilattice::extent::Extent;
+    /// # use ilattice::aabb::Aabb;
     /// # use glam::IVec2;
-    /// let e1 = Extent::from_min_and_max(IVec2::from([0; 2]), IVec2::from([3; 2]));
-    /// let e2 = Extent::from_min_and_max(IVec2::from([2; 2]), IVec2::from([4; 2]));
+    /// let e1 = Aabb::from_min_and_max(IVec2::from([0; 2]), IVec2::from([3; 2]));
+    /// let e2 = Aabb::from_min_and_max(IVec2::from([2; 2]), IVec2::from([4; 2]));
     ///
     /// assert_eq!(
     ///     e1.intersection(&e2),
-    ///     Extent::from_min_and_max(IVec2::from([2; 2]), IVec2::from([3; 2]))
+    ///     Aabb::from_min_and_max(IVec2::from([2; 2]), IVec2::from([3; 2]))
     /// );
     /// assert!(!e1.intersection(&e2).is_empty());
     ///
-    /// let e1 = Extent::from_min_and_max(IVec2::from([0; 2]), IVec2::from([1; 2]));
-    /// let e2 = Extent::from_min_and_max(IVec2::from([3; 2]), IVec2::from([4; 2]));
+    /// let e1 = Aabb::from_min_and_max(IVec2::from([0; 2]), IVec2::from([1; 2]));
+    /// let e2 = Aabb::from_min_and_max(IVec2::from([3; 2]), IVec2::from([4; 2]));
     ///
     /// assert_eq!(e1.intersection(&e2).shape(), IVec2::from([0; 2]));
     /// assert!(e1.intersection(&e2).is_empty());
@@ -175,7 +175,7 @@ where
         Self::from_min_and_max(min, max)
     }
 
-    /// Returns the smallest extent containing all points in `self` or `other`.
+    /// Returns the smallest AABB containing all points in `self` or `other`.
     #[inline]
     pub fn bound_union(&self, other: &Self) -> Self {
         let min = self.min.min(other.min);
@@ -190,7 +190,7 @@ where
         self.intersection(other).eq(self)
     }
 
-    /// Returns all 4 corners of a 2-dimensional extent.
+    /// Returns all 4 corners of a 2-dimensional AABB.
     #[inline]
     pub fn corners2(&self) -> [V; 4]
     where
@@ -207,7 +207,7 @@ where
         ]
     }
 
-    /// Returns all 8 corners of a 3-dimensional extent.
+    /// Returns all 8 corners of a 3-dimensional AABB.
     #[inline]
     pub fn corners3(&self) -> [V; 8]
     where
@@ -353,11 +353,11 @@ where
     }
 }
 
-impl<V> Extent<V>
+impl<V> Aabb<V>
 where
     V: IntegerVector,
 {
-    /// Constructs the unique extent with both `p1` and `p2` as corners.
+    /// Constructs the unique AABB with both `p1` and `p2` as corners.
     #[inline]
     pub fn from_corners(p1: V, p2: V) -> Self {
         let min = p1.min(p2);
@@ -365,7 +365,7 @@ where
         Self::from_min_and_max(min, max)
     }
 
-    /// The number of points contained in the extent.
+    /// The number of points contained in the AABB.
     #[inline]
     pub fn num_points(&self) -> u64 {
         let volume = self.volume();
@@ -374,7 +374,7 @@ where
             .map_or_else(|_| panic!("Failed to convert {volume:?} to u64"), |n| n)
     }
 
-    /// The number of points contained in the extent. Doesn't `panic`
+    /// The number of points contained in the AABB. Doesn't `panic`
     #[inline]
     pub fn checked_num_points(&self) -> Option<u64> {
         let volume = self.volume();
@@ -387,12 +387,12 @@ where
         self.num_points() == 0
     }
 
-    /// Clamps `v` to force in **inside** of the `self` extent.
+    /// Clamps `v` to force in **inside** of the `self` AABB.
     ///
     /// ```
-    /// # use ilattice::extent::Extent;
+    /// # use ilattice::aabb::Aabb;
     /// # use glam::IVec2;
-    /// let e = Extent::from_min_and_max(IVec2::new(-1, 5), IVec2::new(2, 10));
+    /// let e = Aabb::from_min_and_max(IVec2::new(-1, 5), IVec2::new(2, 10));
     /// let p_in = IVec2::new(0, 8);
     /// let p_out = IVec2::new(-4, 20);
     ///
@@ -404,12 +404,12 @@ where
         v.max(self.min).min(self.max)
     }
 
-    /// Returns an iterator over all points in this 2-dimensional extent.
+    /// Returns an iterator over all points in this 2-dimensional AABB.
     ///
     /// ```
-    /// # use ilattice::extent::Extent;
+    /// # use ilattice::aabb::Aabb;
     /// # use glam::UVec2;
-    /// let e = Extent::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
+    /// let e = Aabb::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
     ///
     /// let points: Vec<_> = e.iter2().collect();
     ///
@@ -437,13 +437,13 @@ where
 
     #[cfg(feature = "rayon")]
     /// Returns a rayon parallel iterator over all points in this 2-dimensional
-    /// extent.
+    /// AABB.
     ///
     /// ```
-    /// # use ilattice::extent::Extent;
+    /// # use ilattice::aabb::Aabb;
     /// # use rayon::prelude::*;
     /// # use glam::UVec2;
-    /// let e = Extent::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
+    /// let e = Aabb::from_min_and_shape(UVec2::new(1, 2), UVec2::new(2, 2));
     ///
     /// let points: Vec<_> = e.par_iter2().collect();
     ///
@@ -476,11 +476,11 @@ where
             })
     }
 
-    /// Returns an iterator over all points in this 3-dimensional extent.
+    /// Returns an iterator over all points in this 3-dimensional AABB.
     /// ```
-    /// # use ilattice::extent::Extent;
+    /// # use ilattice::aabb::Aabb;
     /// # use glam::UVec3;
-    /// let e = Extent::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
+    /// let e = Aabb::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
     ///
     /// let points: Vec<_> = e.iter3().collect();
     ///
@@ -518,13 +518,13 @@ where
 
     #[cfg(feature = "rayon")]
     /// Returns a rayon parallel iterator over all points in this 3-dimensional
-    /// extent.
+    /// AABB.
     ///
     /// ```
-    /// # use ilattice::extent::Extent;
+    /// # use ilattice::aabb::Aabb;
     /// # use rayon::prelude::*;
     /// # use glam::UVec3;
-    /// let e = Extent::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
+    /// let e = Aabb::from_min_and_shape(UVec3::new(1, 2, 3), UVec3::new(2, 2, 2));
     ///
     /// let points: Vec<_> = e.par_iter3().collect();
     ///
@@ -565,7 +565,7 @@ where
             })
     }
 
-    /// Returns the smallest extent containing all of the given points.
+    /// Returns the smallest AABB containing all of the given points.
     #[inline]
     pub fn bound_points<I>(mut points: I) -> Self
     where
@@ -573,7 +573,7 @@ where
     {
         let first_v = points
             .next()
-            .expect("Cannot find bounding extent of empty set of points");
+            .expect("Cannot find bounding AABB of empty set of points");
 
         let mut min_point = first_v;
         let mut max_point = first_v;
@@ -586,7 +586,7 @@ where
     }
 }
 
-impl<Vf> Extent<Vf>
+impl<Vf> Aabb<Vf>
 where
     Vf: FloatVector,
 {
@@ -597,19 +597,19 @@ where
     }
 }
 
-impl<Vf, Vi> Extent<Vf>
+impl<Vf, Vi> Aabb<Vf>
 where
     Vf: FloatVector<Int = Vi>,
     Vi: IntegerVector,
 {
-    /// Returns the integer `Extent` that contains `self`.
+    /// Returns the integer `Aabb` that contains `self`.
     #[inline]
-    pub fn containing_integer_extent(&self) -> Extent<Vi> {
-        Extent::from_min_and_max(self.min.floor().cast(), self.max.floor().cast())
+    pub fn containing_integer_aabb(&self) -> Aabb<Vi> {
+        Aabb::from_min_and_max(self.min.floor().cast(), self.max.floor().cast())
     }
 }
 
-impl<V, Rhs> Add<Rhs> for Extent<V>
+impl<V, Rhs> Add<Rhs> for Aabb<V>
 where
     V: Add<Rhs, Output = V>,
     Rhs: Copy,
@@ -625,7 +625,7 @@ where
     }
 }
 
-impl<V, Rhs> Sub<Rhs> for Extent<V>
+impl<V, Rhs> Sub<Rhs> for Aabb<V>
 where
     V: Sub<Rhs, Output = V>,
     Rhs: Copy,
@@ -641,7 +641,7 @@ where
     }
 }
 
-impl<V, Rhs> Mul<Rhs> for Extent<V>
+impl<V, Rhs> Mul<Rhs> for Aabb<V>
 where
     V: Mul<Rhs, Output = V>,
     Rhs: Copy,
@@ -657,7 +657,7 @@ where
     }
 }
 
-impl<V, Rhs> Shl<Rhs> for Extent<V>
+impl<V, Rhs> Shl<Rhs> for Aabb<V>
 where
     V: Shl<Rhs, Output = V>,
     Rhs: Copy,
@@ -673,7 +673,7 @@ where
     }
 }
 
-impl<V, Rhs> Shr<Rhs> for Extent<V>
+impl<V, Rhs> Shr<Rhs> for Aabb<V>
 where
     V: Shr<Rhs, Output = V>,
     Rhs: Copy,
@@ -696,7 +696,7 @@ mod tests {
 
     #[test]
     fn splits_are_consistent() {
-        let e = Extent::from_min_and_max(Vec2::new(0.0, 1.0), Vec2::new(3.0, 4.0));
+        let e = Aabb::from_min_and_max(Vec2::new(0.0, 1.0), Vec2::new(3.0, 4.0));
         let split_at = Vec2::new(2.0, 3.0);
 
         assert_eq!(
@@ -704,7 +704,7 @@ mod tests {
             [0, 1, 2, 3].map(|quadrant| e.split2_single(split_at, quadrant))
         );
 
-        let e = Extent::from_min_and_max(Vec3::new(0.0, 1.0, 2.0), Vec3::new(6.0, 7.0, 8.0));
+        let e = Aabb::from_min_and_max(Vec3::new(0.0, 1.0, 2.0), Vec3::new(6.0, 7.0, 8.0));
         let split_at = Vec3::new(3.0, 4.0, 5.0);
 
         assert_eq!(

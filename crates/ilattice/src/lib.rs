@@ -12,7 +12,7 @@
 //! [integer_lattice_wiki]: https://en.wikipedia.org/wiki/Integer_lattice
 #![deny(clippy::missing_inline_in_public_items)]
 
-pub mod extent;
+pub mod aabb;
 pub mod vector;
 
 #[cfg(feature = "morton-encoding")]
@@ -22,7 +22,7 @@ pub mod morton;
 pub use glam;
 
 pub mod prelude {
-    pub use super::extent::*;
+    pub use super::aabb::*;
     pub use super::vector::*;
 
     #[cfg(feature = "glam")]
