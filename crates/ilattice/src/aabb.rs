@@ -13,6 +13,12 @@ use serde::{Deserialize, Serialize};
 /// in each dimension. You can also just think of it as an axis-aligned box with
 /// some minimum and maximum point.
 #[derive(Debug)]
+#[cfg_attr(
+    feature = "rkyv",
+    derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize),
+    archive(as = "Self"),
+    archive(bound(archive = "V: rkyv::Archive<Archived=V>"))
+)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Aabb<V> {
     /// The minimum point contained in the AABB.
