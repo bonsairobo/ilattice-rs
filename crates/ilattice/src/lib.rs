@@ -25,9 +25,6 @@ pub mod prelude {
     pub use super::aabb::*;
     pub use super::vector::*;
 
-    #[cfg(feature = "glam")]
-    pub use glam::{IVec2, IVec3, UVec2, UVec3, Vec2, Vec3A};
-
     #[cfg(feature = "morton-encoding")]
     pub use super::morton::*;
 }

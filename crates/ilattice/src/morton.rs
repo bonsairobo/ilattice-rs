@@ -4,7 +4,8 @@
 //! first, then y, then z).
 //!
 //! ```
-//! # use ilattice::prelude::{Morton3u32, UVec3};
+//! # use ilattice::morton::Morton3u32;
+//! # use ilattice::glam::UVec3;
 //! assert_eq!(Morton3u32::from(UVec3::new(1, 0, 0)), Morton3u32(0b0001));
 //! assert_eq!(Morton3u32::from(UVec3::new(0, 1, 0)), Morton3u32(0b0010));
 //! assert_eq!(Morton3u32::from(UVec3::new(0, 0, 1)), Morton3u32(0b0100));
