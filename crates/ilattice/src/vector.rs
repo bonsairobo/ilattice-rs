@@ -154,8 +154,8 @@ pub trait LatticeOrder {
 
     fn with_lattice_ord(self) -> Self::LatticeVector;
 
-    fn least_upper_bound(self, other: Self) -> Self;
-    fn greatest_lower_bound(self, other: Self) -> Self;
+    fn min(self, other: Self) -> Self;
+    fn max(self, other: Self) -> Self;
 }
 
 /// A newtype that can be used to override the `PartialOrd` implementation of
@@ -174,7 +174,6 @@ pub trait Bounded {
 pub trait RangeMax {
     fn range_max(min: Self, length: Self) -> Self;
     fn range_length(min: Self, max: Self) -> Self;
-    fn range_lub(max: Self) -> Self;
 }
 
 mod signed_vector {
@@ -336,10 +335,6 @@ mod scalar_impl {
                 fn range_length(min: Self, max: Self) -> Self {
                     1 + max - min
                 }
-                #[inline]
-                fn range_lub(max: Self) -> Self {
-                    max + 1
-                }
             }
         };
     }
@@ -362,10 +357,6 @@ mod scalar_impl {
                 #[inline]
                 fn range_length(min: Self, max: Self) -> Self {
                     max - min
-                }
-                #[inline]
-                fn range_lub(max: Self) -> Self {
-                    max
                 }
             }
         };

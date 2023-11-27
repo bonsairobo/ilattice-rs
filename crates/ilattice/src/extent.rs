@@ -91,13 +91,6 @@ where
         Self::from_min_and_max(min, max)
     }
 
-    /// An alternative representation of an extent as the minimum point and
-    /// least upper bound.
-    #[inline]
-    pub fn from_min_and_lub(min: V, lub: V) -> Self {
-        Self::from_min_and_shape(min, (lub - min).least_upper_bound(V::ZERO))
-    }
-
     /// Translate the extent such that it has `new_min` as it's new minimum.
     #[inline]
     pub fn translate_to_min(&self, new_min: V) -> Self {
@@ -117,16 +110,9 @@ where
     /// which is calculated as `1 + max - min`.
     #[inline]
     pub fn shape(&self) -> V {
-        self.min.zip_map(self.max, V::Scalar::range_length)
-    }
-
-    /// The least element that is an upper bound on all points in the extent.
-    ///
-    /// For real numbers, this is `max`, but for integers, it is the *strict*
-    /// upper bound `max + 1`.
-    #[inline]
-    pub fn least_upper_bound(&self) -> V {
-        self.max.map(V::Scalar::range_lub)
+        self.min
+            .zip_map(self.max, V::Scalar::range_length)
+            .max(V::ZERO)
     }
 
     /// The volume of the extent.
@@ -142,7 +128,7 @@ where
     #[inline]
     pub fn contains(&self, p: V) -> bool {
         self.min.with_lattice_ord() <= p.with_lattice_ord()
-            && p.with_lattice_ord() < self.least_upper_bound().with_lattice_ord()
+            && p.with_lattice_ord() <= self.max.with_lattice_ord()
     }
 
     /// Returns a new extent that's been padded on all borders by `pad_amount`.
@@ -184,23 +170,17 @@ where
     /// ```
     #[inline]
     pub fn intersection(&self, other: &Self) -> Self {
-        let minimum = self.min.least_upper_bound(other.min);
-        let lub = self
-            .least_upper_bound()
-            .greatest_lower_bound(other.least_upper_bound());
-
-        Self::from_min_and_lub(minimum, lub)
+        let min = self.min.max(other.min);
+        let max = self.max.min(other.max);
+        Self::from_min_and_max(min, max)
     }
 
     /// Returns the smallest extent containing all points in `self` or `other`.
     #[inline]
     pub fn bound_union(&self, other: &Self) -> Self {
-        let min = self.min.greatest_lower_bound(other.min);
-        let lub = self
-            .least_upper_bound()
-            .least_upper_bound(other.least_upper_bound());
-
-        Self::from_min_and_lub(min, lub)
+        let min = self.min.min(other.min);
+        let max = self.max.max(other.max);
+        Self::from_min_and_max(min, max)
     }
 
     /// Returns `true` iff the intersection of `self` and `other` is equal to
@@ -217,13 +197,13 @@ where
         V: Vector2,
     {
         let min = self.min;
-        let lub = self.least_upper_bound();
+        let max = self.max;
 
         [
             V::from([min.x(), min.y()]),
-            V::from([lub.x(), min.y()]),
-            V::from([min.x(), lub.y()]),
-            V::from([lub.x(), lub.y()]),
+            V::from([max.x(), min.y()]),
+            V::from([min.x(), max.y()]),
+            V::from([max.x(), max.y()]),
         ]
     }
 
@@ -234,17 +214,17 @@ where
         V: Vector3,
     {
         let min = self.min;
-        let lub = self.least_upper_bound();
+        let max = self.max;
 
         [
             V::from([min.x(), min.y(), min.z()]),
-            V::from([lub.x(), min.y(), min.z()]),
-            V::from([min.x(), lub.y(), min.z()]),
-            V::from([lub.x(), lub.y(), min.z()]),
-            V::from([min.x(), min.y(), lub.z()]),
-            V::from([lub.x(), min.y(), lub.z()]),
-            V::from([min.x(), lub.y(), lub.z()]),
-            V::from([lub.x(), lub.y(), lub.z()]),
+            V::from([max.x(), min.y(), min.z()]),
+            V::from([min.x(), max.y(), min.z()]),
+            V::from([max.x(), max.y(), min.z()]),
+            V::from([min.x(), min.y(), max.z()]),
+            V::from([max.x(), min.y(), max.z()]),
+            V::from([min.x(), max.y(), max.z()]),
+            V::from([max.x(), max.y(), max.z()]),
         ]
     }
 
@@ -254,13 +234,13 @@ where
         V: Vector2,
     {
         let min = self.min;
-        let lub = self.least_upper_bound();
+        let max = self.max;
 
         [
-            Self::from_min_and_lub(min, split),
-            Self::from_min_and_lub(V::from([split.x(), min.y()]), V::from([lub.x(), split.y()])),
-            Self::from_min_and_lub(V::from([min.x(), split.y()]), V::from([split.x(), lub.y()])),
-            Self::from_min_and_lub(split, lub),
+            Self::from_min_and_max(min, split),
+            Self::from_min_and_max(V::from([split.x(), min.y()]), V::from([max.x(), split.y()])),
+            Self::from_min_and_max(V::from([min.x(), split.y()]), V::from([split.x(), max.y()])),
+            Self::from_min_and_max(split, max),
         ]
     }
 
@@ -270,35 +250,35 @@ where
         V: Vector3,
     {
         let min = self.min;
-        let lub = self.least_upper_bound();
+        let max = self.max;
 
         [
-            Self::from_min_and_lub(min, split),
-            Self::from_min_and_lub(
+            Self::from_min_and_max(min, split),
+            Self::from_min_and_max(
                 V::from([split.x(), min.y(), min.z()]),
-                V::from([lub.x(), split.y(), split.z()]),
+                V::from([max.x(), split.y(), split.z()]),
             ),
-            Self::from_min_and_lub(
+            Self::from_min_and_max(
                 V::from([min.x(), split.y(), min.z()]),
-                V::from([split.x(), lub.y(), split.z()]),
+                V::from([split.x(), max.y(), split.z()]),
             ),
-            Self::from_min_and_lub(
+            Self::from_min_and_max(
                 V::from([split.x(), split.y(), min.z()]),
-                V::from([lub.x(), lub.y(), split.z()]),
+                V::from([max.x(), max.y(), split.z()]),
             ),
-            Self::from_min_and_lub(
+            Self::from_min_and_max(
                 V::from([min.x(), min.y(), split.z()]),
-                V::from([split.x(), split.y(), lub.z()]),
+                V::from([split.x(), split.y(), max.z()]),
             ),
-            Self::from_min_and_lub(
+            Self::from_min_and_max(
                 V::from([split.x(), min.y(), split.z()]),
-                V::from([lub.x(), split.y(), lub.z()]),
+                V::from([max.x(), split.y(), max.z()]),
             ),
-            Self::from_min_and_lub(
+            Self::from_min_and_max(
                 V::from([min.x(), split.y(), split.z()]),
-                V::from([split.x(), lub.y(), lub.z()]),
+                V::from([split.x(), max.y(), max.z()]),
             ),
-            Self::from_min_and_lub(split, lub),
+            Self::from_min_and_max(split, max),
         ]
     }
 
@@ -308,8 +288,8 @@ where
         V: Vector2,
     {
         let min = self.min;
-        let lub = self.least_upper_bound();
-        let all_coords = [min.x(), min.y(), split.x(), split.y(), lub.x(), lub.y()];
+        let max = self.max;
+        let all_coords = [min.x(), min.y(), split.x(), split.y(), max.x(), max.y()];
 
         // Corresponds to the coordinate permutation in split2.
         const LUT: [[usize; 4]; 8] = [
@@ -324,7 +304,7 @@ where
         ];
         let [mx, my, lx, ly] = LUT[quadrant as usize].map(|i| all_coords[i]);
 
-        Self::from_min_and_lub(V::from([mx, my]), V::from([lx, ly]))
+        Self::from_min_and_max(V::from([mx, my]), V::from([lx, ly]))
     }
 
     #[inline]
@@ -333,7 +313,7 @@ where
         V: Vector3,
     {
         let min = self.min;
-        let lub = self.least_upper_bound();
+        let max = self.max;
         let all_coords = [
             min.x(),
             min.y(),
@@ -341,9 +321,9 @@ where
             split.x(),
             split.y(),
             split.z(),
-            lub.x(),
-            lub.y(),
-            lub.z(),
+            max.x(),
+            max.y(),
+            max.z(),
         ];
 
         // Corresponds to the coordinate permutation in split3.
@@ -359,7 +339,7 @@ where
         ];
         let [mx, my, mz, lx, ly, lz] = LUT[octant as usize].map(|i| all_coords[i]);
 
-        Self::from_min_and_lub(V::from([mx, my, mz]), V::from([lx, ly, lz]))
+        Self::from_min_and_max(V::from([mx, my, mz]), V::from([lx, ly, lz]))
     }
 
     #[allow(clippy::suspicious_operation_groupings)]
@@ -371,12 +351,6 @@ where
         let s = self.shape();
         (V::Scalar::ONE + V::Scalar::ONE) * (s.x() * s.y() + s.y() * s.z() + s.z() * s.x())
     }
-
-    #[inline]
-    pub fn clamp_min_lub(&self, v: V) -> V {
-        v.least_upper_bound(self.min)
-            .greatest_lower_bound(self.least_upper_bound())
-    }
 }
 
 impl<V> Extent<V>
@@ -386,9 +360,8 @@ where
     /// Constructs the unique extent with both `p1` and `p2` as corners.
     #[inline]
     pub fn from_corners(p1: V, p2: V) -> Self {
-        let min = p1.greatest_lower_bound(p2);
-        let max = p1.least_upper_bound(p2);
-
+        let min = p1.min(p2);
+        let max = p1.max(p2);
         Self::from_min_and_max(min, max)
     }
 
@@ -423,12 +396,12 @@ where
     /// let p_in = IVec2::new(0, 8);
     /// let p_out = IVec2::new(-4, 20);
     ///
-    /// assert_eq!(e.clamp_min_max(p_in), p_in);
-    /// assert_eq!(e.clamp_min_max(p_out), IVec2::new(-1, 10));
+    /// assert_eq!(e.clamp(p_in), p_in);
+    /// assert_eq!(e.clamp(p_out), IVec2::new(-1, 10));
     /// ```
     #[inline]
-    pub fn clamp_min_max(&self, v: V) -> V {
-        v.least_upper_bound(self.min).greatest_lower_bound(self.max)
+    pub fn clamp(&self, v: V) -> V {
+        v.max(self.min).min(self.max)
     }
 
     /// Returns an iterator over all points in this 2-dimensional extent.
@@ -454,12 +427,10 @@ where
     pub fn iter2(&self) -> impl Iterator<Item = V>
     where
         V: Vector2,
-        std::ops::Range<V::IntScalar>: Iterator<Item = V::IntScalar>,
+        std::ops::RangeInclusive<V::IntScalar>: Iterator<Item = V::IntScalar>,
     {
-        // For some reason, using self.max requires satisfying more trait bounds.
-        let lub = self.least_upper_bound();
-        let y_range = self.min.y()..lub.y();
-        let x_range = self.min.x()..lub.x();
+        let y_range = self.min.y()..=self.max.y();
+        let x_range = self.min.x()..=self.max.x();
 
         y_range.flat_map(move |y| x_range.clone().map(move |x| V::from([x, y])))
     }
@@ -491,14 +462,18 @@ where
     where
         V: Vector2 + Send,
         V::Scalar: Send + Sync,
-        std::ops::Range<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
+        std::ops::RangeInclusive<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
     {
         let min_x = self.min.x();
-        let lub_x = self.least_upper_bound().x();
+        let max_x = self.max.x();
 
-        (self.min.y()..self.least_upper_bound().y())
+        (self.min.y()..=self.max.y())
             .into_par_iter()
-            .flat_map(move |y| (min_x..lub_x).into_par_iter().map(move |x| V::from([x, y])))
+            .flat_map(move |y| {
+                (min_x..=max_x)
+                    .into_par_iter()
+                    .map(move |x| V::from([x, y]))
+            })
     }
 
     /// Returns an iterator over all points in this 3-dimensional extent.
@@ -527,13 +502,11 @@ where
     pub fn iter3(&self) -> impl Iterator<Item = V>
     where
         V: Vector3,
-        std::ops::Range<V::IntScalar>: Iterator<Item = V::IntScalar>,
+        std::ops::RangeInclusive<V::IntScalar>: Iterator<Item = V::IntScalar>,
     {
-        let min = self.min;
-        let lub = self.least_upper_bound();
-        let z_range = min.z()..lub.z();
-        let y_range = min.y()..lub.y();
-        let x_range = min.x()..lub.x();
+        let z_range = self.min.z()..=self.max.z();
+        let y_range = self.min.y()..=self.max.y();
+        let x_range = self.min.x()..=self.max.x();
 
         z_range.flat_map(move |z| {
             y_range.clone().flat_map({
@@ -574,21 +547,22 @@ where
     where
         V: Vector3 + Send,
         V::Scalar: Send + Sync,
-        std::ops::Range<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
+        std::ops::RangeInclusive<V::IntScalar>: IntoParallelIterator<Item = V::IntScalar>,
     {
-        let lub = self.least_upper_bound();
         let min_y = self.min.y();
-        let lub_y = lub.y();
+        let max_y = self.max.y();
         let min_x = self.min.x();
-        let lub_x = lub.x();
+        let max_x = self.max.x();
 
-        (self.min.z()..lub.z()).into_par_iter().flat_map(move |z| {
-            (min_y..lub_y).into_par_iter().flat_map(move |y| {
-                (min_x..lub_x)
-                    .into_par_iter()
-                    .map(move |x| V::from([x, y, z]))
+        (self.min.z()..=self.max.z())
+            .into_par_iter()
+            .flat_map(move |z| {
+                (min_y..=max_y).into_par_iter().flat_map(move |y| {
+                    (min_x..=max_x)
+                        .into_par_iter()
+                        .map(move |x| V::from([x, y, z]))
+                })
             })
-        })
     }
 
     /// Returns the smallest extent containing all of the given points.
@@ -604,8 +578,8 @@ where
         let mut min_point = first_v;
         let mut max_point = first_v;
         for v in points {
-            min_point = min_point.greatest_lower_bound(v);
-            max_point = max_point.least_upper_bound(v);
+            min_point = min_point.min(v);
+            max_point = max_point.max(v);
         }
 
         Self::from_min_and_max(min_point, max_point)
@@ -631,10 +605,7 @@ where
     /// Returns the integer `Extent` that contains `self`.
     #[inline]
     pub fn containing_integer_extent(&self) -> Extent<Vi> {
-        Extent::from_min_and_max(
-            self.min.floor().cast(),
-            self.least_upper_bound().floor().cast(),
-        )
+        Extent::from_min_and_max(self.min.floor().cast(), self.max.floor().cast())
     }
 }
 
@@ -725,7 +696,7 @@ mod tests {
 
     #[test]
     fn splits_are_consistent() {
-        let e = Extent::from_min_and_lub(Vec2::new(0.0, 1.0), Vec2::new(3.0, 4.0));
+        let e = Extent::from_min_and_max(Vec2::new(0.0, 1.0), Vec2::new(3.0, 4.0));
         let split_at = Vec2::new(2.0, 3.0);
 
         assert_eq!(
@@ -733,7 +704,7 @@ mod tests {
             [0, 1, 2, 3].map(|quadrant| e.split2_single(split_at, quadrant))
         );
 
-        let e = Extent::from_min_and_lub(Vec3::new(0.0, 1.0, 2.0), Vec3::new(6.0, 7.0, 8.0));
+        let e = Extent::from_min_and_max(Vec3::new(0.0, 1.0, 2.0), Vec3::new(6.0, 7.0, 8.0));
         let split_at = Vec3::new(3.0, 4.0, 5.0);
 
         assert_eq!(

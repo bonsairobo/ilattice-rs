@@ -19,11 +19,11 @@ macro_rules! impl_lattice_order {
                 WithLatticeOrd(self)
             }
             #[inline]
-            fn least_upper_bound(self, other: Self) -> Self {
+            fn max(self, other: Self) -> Self {
                 self.max(other)
             }
             #[inline]
-            fn greatest_lower_bound(self, other: Self) -> Self {
+            fn min(self, other: Self) -> Self {
                 self.min(other)
             }
         }

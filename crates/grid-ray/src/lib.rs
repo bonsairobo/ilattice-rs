@@ -113,7 +113,7 @@ where
 
         // For each axis, calculate the time delta we need to reach a pixel boundary on that axis. For a positive direction,
         // this is just the next pixel, but for negative, it's the current pixel (hence the LUB with zero).
-        let next_bounds: Vf = (current_grid_point + step.least_upper_bound(Vi::ZERO)).cast();
+        let next_bounds: Vf = (current_grid_point + step.max(Vi::ZERO)).cast();
         let delta_to_next_bounds = next_bounds - start;
         let t_max = delta_to_next_bounds / direction;
 
