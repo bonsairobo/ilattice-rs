@@ -1,5 +1,6 @@
 use crate::vector::{FloatVector, IntegerVector, One, RangeMax, Vector, Vector2, Vector3, Zero};
 use core::ops::{Add, Mul, Shl, Shr, Sub};
+use std::ops::Div;
 
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
@@ -674,6 +675,22 @@ where
         Self {
             min: self.min * rhs,
             max: self.max * rhs,
+        }
+    }
+}
+
+impl<V, Rhs> Div<Rhs> for Aabb<V>
+where
+    V: Div<Rhs, Output = V>,
+    Rhs: Copy,
+{
+    type Output = Self;
+
+    #[inline]
+    fn div(self, rhs: Rhs) -> Self::Output {
+        Self {
+            min: self.min / rhs,
+            max: self.max / rhs,
         }
     }
 }
