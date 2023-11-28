@@ -1,4 +1,4 @@
-use crate::vector::{FloatVector, IntegerVector, One, RangeMax, Vector, Vector2, Vector3};
+use crate::vector::{FloatVector, IntegerVector, One, RangeMax, Vector, Vector2, Vector3, Zero};
 use core::ops::{Add, Mul, Shl, Shr, Sub};
 
 #[cfg(feature = "rayon")]
@@ -112,11 +112,13 @@ where
         Self::from_min_and_shape(self.min, new_shape)
     }
 
-    /// The length of each dimension of the AABB.
+    /// The non-negative length of each dimension of the AABB.
     ///
     /// For real numbers, this is just `max - min`. For integers, we define the
     /// 1-dimensional length as the number of points in the range `[min, max]`,
     /// which is calculated as `1 + max - min`.
+    ///
+    /// All shape components are clamped to be non-negative.
     #[inline]
     pub fn shape(&self) -> V {
         self.min
@@ -124,13 +126,21 @@ where
             .max(V::ZERO)
     }
 
-    /// The volume of the AABB.
+    /// The non-negative volume of the AABB.
     ///
     /// For real numbers, `(max - min)^D`, and for integers, the number of
     /// points in the AABB.
     #[inline]
     pub fn volume(&self) -> V::Scalar {
         self.shape().fold(V::Scalar::ONE, |c, out| c * out)
+    }
+
+    /// Returns `true` iff `self.volume() <= 0`.
+    ///
+    /// This works because volumes are guaranteed to be non-negative.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.volume() <= V::Scalar::ZERO
     }
 
     /// Returns `true` iff the point `p` is contained in this AABB.
@@ -190,6 +200,51 @@ where
         let min = self.min.min(other.min);
         let max = self.max.max(other.max);
         Self::new(min, max)
+    }
+
+    /// Constructs the unique AABB with both `p1` and `p2` as corners.
+    #[inline]
+    pub fn from_corners(p1: V, p2: V) -> Self {
+        let min = p1.min(p2);
+        let max = p1.max(p2);
+        Self::new(min, max)
+    }
+
+    /// Returns the smallest AABB containing all of the given points.
+    #[inline]
+    pub fn bound_points<I>(mut points: I) -> Self
+    where
+        I: Iterator<Item = V>,
+    {
+        let first_v = points
+            .next()
+            .expect("Cannot find bounding AABB of empty set of points");
+
+        let mut min_point = first_v;
+        let mut max_point = first_v;
+        for v in points {
+            min_point = min_point.min(v);
+            max_point = max_point.max(v);
+        }
+
+        Self::new(min_point, max_point)
+    }
+
+    /// Clamps `v` to force it **inside** of the `self` AABB.
+    ///
+    /// ```
+    /// # use ilattice::Aabb;
+    /// # use glam::IVec2;
+    /// let e = Aabb::new(IVec2::new(-1, 5), IVec2::new(2, 10));
+    /// let p_in = IVec2::new(0, 8);
+    /// let p_out = IVec2::new(-4, 20);
+    ///
+    /// assert_eq!(e.clamp(p_in), p_in);
+    /// assert_eq!(e.clamp(p_out), IVec2::new(-1, 10));
+    /// ```
+    #[inline]
+    pub fn clamp(&self, v: V) -> V {
+        v.max(self.min).min(self.max)
     }
 
     /// Returns `true` iff the intersection of `self` and `other` is equal to
@@ -373,14 +428,6 @@ impl<V> Aabb<V>
 where
     V: IntegerVector,
 {
-    /// Constructs the unique AABB with both `p1` and `p2` as corners.
-    #[inline]
-    pub fn from_corners(p1: V, p2: V) -> Self {
-        let min = p1.min(p2);
-        let max = p1.max(p2);
-        Self::new(min, max)
-    }
-
     /// The number of points contained in the AABB.
     #[inline]
     pub fn num_points(&self) -> u64 {
@@ -395,29 +442,6 @@ where
     pub fn checked_num_points(&self) -> Option<u64> {
         let volume = self.volume();
         volume.try_into().ok()
-    }
-
-    /// Returns `true` iff `self.num_points() == 0`.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.num_points() == 0
-    }
-
-    /// Clamps `v` to force it **inside** of the `self` AABB.
-    ///
-    /// ```
-    /// # use ilattice::Aabb;
-    /// # use glam::IVec2;
-    /// let e = Aabb::new(IVec2::new(-1, 5), IVec2::new(2, 10));
-    /// let p_in = IVec2::new(0, 8);
-    /// let p_out = IVec2::new(-4, 20);
-    ///
-    /// assert_eq!(e.clamp(p_in), p_in);
-    /// assert_eq!(e.clamp(p_out), IVec2::new(-1, 10));
-    /// ```
-    #[inline]
-    pub fn clamp(&self, v: V) -> V {
-        v.max(self.min).min(self.max)
     }
 
     /// Returns an iterator over all points in this 2-dimensional AABB.
@@ -579,26 +603,6 @@ where
                         .map(move |x| V::from([x, y, z]))
                 })
             })
-    }
-
-    /// Returns the smallest AABB containing all of the given points.
-    #[inline]
-    pub fn bound_points<I>(mut points: I) -> Self
-    where
-        I: Iterator<Item = V>,
-    {
-        let first_v = points
-            .next()
-            .expect("Cannot find bounding AABB of empty set of points");
-
-        let mut min_point = first_v;
-        let mut max_point = first_v;
-        for v in points {
-            min_point = min_point.min(v);
-            max_point = max_point.max(v);
-        }
-
-        Self::new(min_point, max_point)
     }
 }
 
