@@ -403,7 +403,7 @@ where
         self.num_points() == 0
     }
 
-    /// Clamps `v` to force in **inside** of the `self` AABB.
+    /// Clamps `v` to force it **inside** of the `self` AABB.
     ///
     /// ```
     /// # use ilattice::Aabb;
